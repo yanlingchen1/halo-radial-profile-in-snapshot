@@ -6,7 +6,6 @@
 abundance to solar: wherea calcium and sulfur are the same as the silicon
 ['hydrogen', 'helium', 'carbon', 'nitrogen', 'oxygen', 'neon', 'magnesium', 'silicon', 'calcium', 'sulfur', 'iron']
 '''
-## Warning! Wrong SB computation, right in compute in cylinder
 import numba as nb
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,21 +24,22 @@ import os
 m_nu = [0.02, 0.02, 0.02] * u.eV
 DESyr3 = FlatLambdaCDM(H0=68.1, Om0=0.3046, m_nu=m_nu, Ob0=0.0486, Tcmb0=2.725)
 
-
 @nb.jit(nopython=True)
-def halo_part_in_r200c_nb(coor, halo_center, r200c):
-    n = coor.shape[1]
+def msk_in_cylinder(coor, halo_center, r, z): # r, z in cMpc
+    n = 2
     where = np.empty(coor.shape[0], dtype=np.bool_)
     for i in range(coor.shape[0]):
         d2 = 0.0
         for j in range(n):
             d2 += (coor[i,j] - halo_center[j])**2
-        where[i] = d2 < (6*r200c)**2
-    return where
+        where[i] = (d2 <= r**2) & (coor[i,2] < (halo_center[2]+z/2)) & (coor[i,2] >= (halo_center[2]-z/2))
+    return where  
+
 def interpdens2nH(interpdens, hydrogen_massfrac, redshifts):
     # after np.log10, unyt unit is lost
     scale_factor = 1/(redshifts+1)
-    return interpdens.to(g/cm**3) * hydrogen_massfrac / mp.to(g) * (1/scale_factor**3) 
+    return interpdens.to(g/cm**3) * hydrogen_massfrac / mp.to(g) * (1/scale_factor**3)
+     
 def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
     """
     This function compute xray luminosity for particle fall in observed energy bin at z=0
@@ -62,6 +62,8 @@ def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
     
     """
     print("interpolating xrays")
+    # in one snapshot, all the particles have the same redshift! 
+    # However particles' luminosity distances are different since it also due to their z axis los distance
     data.gas.redshifts = np.ones(len(data.gas.densities))*z
     lum, __, abun_to_solar = interp_xray(
         data.gas.densities,
@@ -84,22 +86,24 @@ def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
         a_agn[a_agn==-1] = np.nan
         if np.sum(np.isfinite(a_agn))!=0:
             a_agn = np.array(a_agn)
-            t_par = np.ones(len(data.gas.redshifts)) * DESyr3.lookback_time(z)
+            t_par = DESyr3.lookback_time(z)
             t_agn = DESyr3.lookback_time(1/a_agn-1)
 
         jointmsk = ~(((nH_dens.value<1e-8) | (nH_dens.value>1e6)) | ((data.gas.temperatures.value<1e5) | (data.gas.temperatures.value>np.power(10,9.5))) | ((abs(t_agn-t_par).value*1000<15) & (~np.isnan(a_agn))& ((np.power(10, 6.94455)<data.gas.temperatures.value) | (np.power(10, 8.24455)>data.gas.temperatures.value))))
         print(np.sum(jointmsk))
-        return lum[0], jointmsk, abun_to_solar
+        flux = lum[0]/(4*np.pi*(data.gas.coordinates[:,2]*(1+z))**2)
+        return flux, jointmsk, abun_to_solar
 
+xbins = np.linspace(-2,3.1,50)
+radii_bins = np.power(10, xbins) * 1 #Mpc
 def cal_halo_summass(sid):
-    xc, yc, zc = gasmass_center[sid]
     # load region
     mask = sw.mask(filename)
     boxsize = mask.metadata.boxsize
     load_region = [[(gasmass_center[:,0][sid]/boxsize[0].value-0.025)*boxsize[0], (gasmass_center[:,0][sid]/boxsize[0].value+0.025)*boxsize[0]],[(gasmass_center[:,1][sid]/boxsize[1].value-0.025)*boxsize[1], (gasmass_center[:,1][sid]/boxsize[1].value+0.025)*boxsize[1]],[(gasmass_center[:,2][sid]/boxsize[2].value-0.025)*boxsize[2], (gasmass_center[:,2][sid]/boxsize[2].value+0.025)*boxsize[2]]]
     mask.constrain_spatial(load_region)
     data = sw.load(filename, mask=mask)
-    msk = halo_part_in_r200c_nb(np.array(data.gas.coordinates), (gasmass_center[:,0][sid],gasmass_center[:,1][sid],gasmass_center[:,2][sid]), r200c_sp[sid])
+    msk = msk_in_cylinder(np.array(data.gas.coordinates), (gasmass_center[:,0][sid],gasmass_center[:,1][sid],gasmass_center[:,2][sid]), 3.5, 6.25)
     nH_densities = interpdens2nH(data.gas.densities, data.gas.smoothed_element_mass_fractions.hydrogen, np.zeros(data.gas.densities.shape))
     linesbins = {'fe17':[0.724, 0.726],'o7f':[0.574,0.576],'o8':[0.653,0.656]}
     lumdict = {}
@@ -112,7 +116,6 @@ start = time.perf_counter()
 # load soap cat
 print('loading soap cat...')
 # Caution!!! only redshift 0 soap halo position is correct, for larger redshifts halo postions are wrong!
-print('its me')
 
 reds = 0
 with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/SOAP/halo_properties_00{int(77-reds/0.05)}.hdf5", 'r') as catalogue_soap:
@@ -128,7 +131,7 @@ with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/SOAP
 
 # define snapshot file
 filename = f'/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/snapshots/flamingo_00{int(77-reds/0.05)}/flamingo_00{int(77-reds/0.05)}.hdf5'
-workpath = '/cosma8/data/dp004/dc-chen3/work/bin/gen_xray_pipeline/230318/cal_halo_lum_by_halo_230331'
+workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot'
 
 
 # preload table
@@ -138,10 +141,9 @@ interp.load_table()
 print('table_loaded')
 
 np.random.seed(0)
-mass_filter = np.array([13.0])
-halonum = 128
+mass_filter = np.array([13.0, 13.5, 14.0, 14.5, 15.0])
+halonum = 1028
 for mf in mass_filter[::-1]:
-# mf = 
     where = (m200c_sp < np.power(10,mf+0.5)) & (m200c_sp >= np.power(10,mf)) & (gasmass_center[:,0] > 50) & (gasmass_center[:,0] < 950) & (gasmass_center[:,1] > 50) & (gasmass_center[:,1] < 950) & (gasmass_center[:,2] > 50) & (gasmass_center[:,2] < 950)
     if np.sum(where)>halonum:
         halo_rands = np.random.randint(np.sum(where), size=halonum)
@@ -149,7 +151,6 @@ for mf in mass_filter[::-1]:
     else:
         halo_sel_ids = soap_ids[where]
 
-    print(halo_sel_ids)
     output = {}
     output['halo_ids'] = halo_sel_ids
     output['r200c'] = r200c_sp[np.array(halo_sel_ids-1, dtype = int)]
@@ -162,9 +163,9 @@ for mf in mass_filter[::-1]:
     output['o7f'] = np.zeros(len(halo_sel_ids))
     output['o8'] = np.zeros(len(halo_sel_ids))
 
-    savepath = f'{workpath}/xraylum_csvs_230419_{mf}_groups_128halos'
+    savepath = f'{workpath}/results/xraysb_csvs_230504_{mf}_groups_1028halos'
     os.makedirs(savepath, exist_ok = True)
-    with concurrent.futures.ProcessPoolExecutor(32) as executor:
+    with concurrent.futures.ProcessPoolExecutor(64) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
             halodoc = {}
             halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
@@ -174,7 +175,6 @@ for mf in mass_filter[::-1]:
     df = pd.DataFrame.from_dict(output)
     df.to_csv(f'{savepath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
     print(f'{savepath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv has been saved! ')
-# ## for test
-# cal_halo_summass(int(halo_sel_ids[0]-1))
+
 finish = time.perf_counter()
 print(f'Finished in {(finish-start)/60:.2f} min(s)')

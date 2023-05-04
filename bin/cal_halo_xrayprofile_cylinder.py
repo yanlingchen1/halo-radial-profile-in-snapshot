@@ -30,11 +30,11 @@ def msk_in_cylinder(coor, halo_center, r1, r2, z):
     n = 2
     where = np.empty(coor.shape[0], dtype=np.bool_)
     for i in range(coor.shape[0]):
-        d2 = 0.0
-        for j in range(n):
+       for j in range(n):
             d2 += (coor[i,j] - halo_center[j])**2
         where[i] = (d2 < r2**2) & (d2 >= r1**2) & (coor[i,2] < (halo_center[2]+z)) & (coor[i,2] >= (halo_center[2]-z))
-    return where
+    return where      d2 = 0.0
+   
 
 for mf in [13.5, 14.0, 14.5]:
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/gen_xray_pipeline/230318/cal_halo_lum_by_halo_230331/xraylum_csvs_230419_{mf}_groups_128halos'
