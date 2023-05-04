@@ -10,5 +10,5 @@ Flamingo snapshots (L1000N1800)
 3. cut median profile before dropping (implying not enough particles), while leave mean profiles. Criteria by Joey: Cut if 60% of the halos have 0 particles in this bin.
 4. Develop calculate cylinder of the halos. 
 5. Calculate for halo mass from 13-15.5
-6. SB error: every particle should be divided by the square of its lum distance, in other words, z distance.
+6. SB error: every particle should be divided by the square of its lum distance, in other words, (1+z)d_trans = (1+z) d_z
  
