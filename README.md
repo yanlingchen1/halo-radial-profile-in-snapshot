@@ -1,7 +1,7 @@
 # halo-radial-profile-in-snapshot
 
 ## Data
-Flamingo snapshots (L1000N1800)
+Flamingo snapshots (L1000N1800) median resolution (particle mass ~1e9 solar mass)
 
 ## Usage 
 - Plot halo radial profile for various properties of different halo mass bins.
