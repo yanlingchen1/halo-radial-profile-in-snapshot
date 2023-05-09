@@ -143,7 +143,7 @@ print('table_loaded')
 np.random.seed(0)
 mass_filter = np.array([13.0, 13.5, 14.0, 14.5, 15.0])
 halonum = 1028
-for mf in mass_filter[::-1]:
+for mf in mass_filter:
     where = (m200c_sp < np.power(10,mf+0.5)) & (m200c_sp >= np.power(10,mf)) & (gasmass_center[:,0] > 50) & (gasmass_center[:,0] < 950) & (gasmass_center[:,1] > 50) & (gasmass_center[:,1] < 950) & (gasmass_center[:,2] > 50) & (gasmass_center[:,2] < 950)
     if np.sum(where)>halonum:
         halo_rands = np.random.randint(np.sum(where), size=halonum)
