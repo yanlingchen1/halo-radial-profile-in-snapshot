@@ -10,7 +10,7 @@ Flamingo snapshots (L1000N1800) median resolution (particle mass ~1e9 solar mass
 ## STEPS
 ### STEP1: generate particle xray flux in cylinder
 For every halo, calculate the xray flux for every particles in the cylinder.
-- The xray flux of every particle is defined as $L_{part}/(4*\pi * d_L^2)$, where luminosity distance $d_L = z_coor * (1+redshift)$ 
+- The xray flux of every particle is defined as $L_{part}/(4*\pi * d_L^2)$, where luminosity distance $d_L = coordinate_z * (1+redshift)$ 
 - The cylinder center is halo's gas mass center. The cylinder length is 6.25 cMpc, the radius of the cylinder is 3.5  cMpc. Defined as the same as Nastasha[1].
 - The recently heated particles are excluded. 
 - Note: I took halos in snapshot z=0 while Nastasha took halos in snapshot z=0.1.
