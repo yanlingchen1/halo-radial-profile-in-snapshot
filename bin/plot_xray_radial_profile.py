@@ -78,9 +78,9 @@ for i, mode in enumerate(['fe17', 'o7f', 'o8']):
     dat = pd.read_csv(f'{workpath}/{mode}.csv')
     dat[~np.isfinite(dat)] = 0
     prop_cts = np.sum(dat>80, axis=1)[:-1]
-    cts_msk = (prop_cts/max(prop_cts))>0.8
-    print(prop_cts)
-    print(np.sum(cts_msk))
+    cts_msk = (prop_cts/max(prop_cts))>0.9
+    # print(prop_cts)
+    # print(np.sum(cts_msk))
     bins = np.power(10,xbins)
     bins_mid = (bins[0:-1] +bins[1:])/2
     prop_med = unit2wij_le(np.nanmedian(dat, axis=1), mode, bins)
