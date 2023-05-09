@@ -26,34 +26,31 @@ def basic_figure_style():
     ######################################################
 basic_figure_style()
 cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4', '#949494', '#ece133', '#56b4e9']
-
-
-cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4', '#949494', '#ece133', '#56b4e9']
 linesbins = {'fe17':[0.715,0.717],'o7f':[0.574,0.576],'o8':[0.653,0.656]}
+natasha_res = {'fe17':[[11.75,12.25, 12.75, 13.25, 13.75],[-1.3, -0.5, 1, 2.2, 2.5], [0.7, 1.5, 2.2, 3, 3]], 'o7f':[[11.75,12.25, 12.75, 13.25, 13.75],[-0.5, 0, 1.2, 2.5, 2.5], [0.7, 2, 2.5, 2.7, 2.7]], 'o8':[[11.75,12.25, 12.75, 13.25, 13.75],[-1, 0.2, 1.9, 3, 3.8], [1.2,2.1, 3.1,3.8, 4.1]]}
 
-natasha_res = {'fe17':[[11.75,12.25, 12.75, 13.25, 13.75],[-1,2.3,2.7,3,3]], 'o7f':[[11.75,12.25, 12.75, 13.25, 13.75],[0,1,2,3,3]], 'o8':[[11.75,12.25, 12.75, 13.25, 13.75],[0.5,1.3,2.8,3.5,4]]}
 mass_filter = np.array([13, 13.5, 14, 14.5, 15])
-fig, axs = plt.subplots(3,1, figsize = (6,18), sharex = True)
-for i, mf in enumerate(mass_filter):
-    workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/xraysb_csvs_230504_13.0_groups_1028halos' 
-    df = pd.read_csv(f'{workpath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv') 
-    haloids = df['halo_ids']
-    for j, line in enumerate(['o8', 'o7f', 'fe17']): 
-        lum = np.full((len(haloids)), np.nan)
-        for k, haloid in enumerate(haloids):
-            df_part = pd.read_csv(f'{workpath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv')
-            lum[k] = np.nansum(df_part[line][df_part['jointmsk']])
-        axs[j].errorbar(np.ones(len(lum))*(mf+0.25), np.median(lum, axis=1)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5, xerr = 0.25,color = cb[i], fmt = '.')
-        axs[j].errorbar(np.ones(len(lum))*(mf+0.25), np.percentile(lum,84, axis=1)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5, xerr = 0.25,color = cb[i], fmt = '.')
-        axs[j].errorbar(np.ones(len(lum))*(mf+0.25), np.percentile(lum,16, axis=1)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5, xerr = 0.25,color = cb[i], fmt = '.')
-for j, line in enumerate(['o8', 'o7f', 'fe17']):
-    for k in range(2):
-        axs[j].errorbar(natasha_res[line][0], np.power(10,natasha_res[line][1]), xerr = 0.25, alpha = 0.1, color = 'k')
-    axs[j].set_yscale('log')
+fig, axs = plt.subplots(3,1, figsize = (9,22))
+for j, line in enumerate(['o8', 'o7f', 'fe17']): 
+    nat_mean = (np.array(natasha_res[line][1]) + np.array(natasha_res[line][2]))/2
+    axs[j].errorbar(natasha_res[line][0], nat_mean, xerr = 0.25, yerr = (nat_mean-natasha_res[line][1], natasha_res[line][2]-nat_mean), alpha = 0.3, color = 'k', label = 'nastasha')
+    my_med = np.zeros(mass_filter.shape); my_hierr = np.zeros(mass_filter.shape); my_loerr = np.zeros(mass_filter.shape)
+
+    for i, mf in enumerate(mass_filter):
+        print(mf)
+        workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/xraysb_csvs_230504_{mf}_groups_1028halos' 
+        df = pd.read_csv(f'{workpath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')   
+        lum = df[line] 
+        my_med[i] = np.log10(np.median(lum)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5)
+        my_hierr[i] = np.log10(np.percentile(lum, 84)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5) - np.log10(np.median(lum)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5)
+        my_loerr[i] = np.log10(np.median(lum) /np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5) - np.log10(np.percentile(lum, 16)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5)
+    axs[j].errorbar(mass_filter+0.25, my_med, yerr=(my_loerr, my_hierr), xerr = np.full(mass_filter.shape, 0.25),color = 'r', alpha = 0.5, label = 'my results')
+    # axs[j].set_yscale('log')
     axs[j].set_xticks(np.arange(11.5,15.5,0.5))
-    axs[j].set_ylim(1e-3, 1e7)
+    # axs[j].set_ylim(1e-3, 1e7)
     axs[j].set_title(f'xray line luminosity of {line} for halos')
     axs[j].set_ylabel(f'L [photons/100ks/$\\rm m^2$]')
     axs[j].set_xlabel(f'$\\rm log_{{10}}M_{{200c}}$ [$\\rm M_\odot$]')
     axs[j].grid(True)
-plt.savefig(f'{workpath}/png/halomass_vs_xraylum.png')
+    axs[j].legend()
+plt.savefig(f'{workpath}/../../fig/halomass_vs_xraylum.png')
