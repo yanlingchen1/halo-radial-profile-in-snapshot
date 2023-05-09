@@ -92,7 +92,7 @@ def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
         jointmsk = ~(((nH_dens.value<1e-8) | (nH_dens.value>1e6)) | ((data.gas.temperatures.value<1e5) | (data.gas.temperatures.value>np.power(10,9.5))) | ((abs(t_agn-t_par).value*1000<15) & (~np.isnan(a_agn))& ((np.power(10, 6.94455)<data.gas.temperatures.value) | (np.power(10, 8.24455)>data.gas.temperatures.value))))
         print(np.sum(jointmsk))
         flux = lum[0]/(4*np.pi*(data.gas.coordinates[:,2]*(1+z))**2)
-        return flux, jointmsk, abun_to_solar
+        return lum[0], flux, jointmsk, abun_to_solar
 
 xbins = np.linspace(-2,3.1,50)
 radii_bins = np.power(10, xbins) * 1 #Mpc
