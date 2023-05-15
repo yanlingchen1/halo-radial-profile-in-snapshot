@@ -6,13 +6,13 @@
 #SBATCH -A dp004
 #SBATCH --exclusive
 #SBATCH --no-requeue
-#SBATCH -t 72:00:00
+#SBATCH -t 12:00:00
 #SBATCH --ntasks 32
 
 module purge
 module load gnu_comp/11.1.0 openmpi/4.1.1 python/3.10.1
 
-python3 cal_halo_xrayprofile_cylinder.py
+python3 cal_halo_xrayprofile_cylinder_coor_xraylum.py
 
 
 

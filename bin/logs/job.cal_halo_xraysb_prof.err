@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/bin/cal_halo_xrayprofile_cylinder_coor_xraylum.py", line 36, in <module>
+    for k, result in enumerate(executor.map(cal_xraylum,np.arange(len(haloids)))):
+NameError: name 'cal_xraylum' is not defined

@@ -1,3 +1,5 @@
+# 这里没有除以4pi 能对上，除以了nastasha的结果就高了？
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -26,25 +28,25 @@ def basic_figure_style():
     ######################################################
 basic_figure_style()
 cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4', '#949494', '#ece133', '#56b4e9']
-linesbins = {'fe17':[0.715,0.717],'o7f':[0.574,0.576],'o8':[0.653,0.656]}
-natasha_res = {'fe17':[[11.75,12.25, 12.75, 13.25, 13.75],[-1.3, -0.5, 1, 2.2, 2.5], [0.7, 1.5, 2.2, 3, 3]], 'o7f':[[11.75,12.25, 12.75, 13.25, 13.75],[-0.5, 0, 1.2, 2.5, 2.5], [0.7, 2, 2.5, 2.7, 2.7]], 'o8':[[11.75,12.25, 12.75, 13.25, 13.75],[-1, 0.2, 1.9, 3, 3.8], [1.2,2.1, 3.1,3.8, 4.1]]}
+linesbins = {'sumlum_fe17':[0.715,0.717],'sumlum_o7f':[0.574,0.576],'sumlum_o8':[0.653,0.656]}
+natasha_res = {'sumlum_fe17':[[11.75,12.25, 12.75, 13.25, 13.75],[-1.3, -0.5, 1, 2.2, 2.5], [0.7, 1.5, 2.2, 3, 3]], 'sumlum_o7f':[[11.75,12.25, 12.75, 13.25, 13.75],[-0.5, 0, 1.2, 2.5, 2.5], [0.7, 2, 2.5, 2.7, 2.7]], 'sumlum_o8':[[11.75,12.25, 12.75, 13.25, 13.75],[-1, 0.2, 1.9, 3, 3.8], [1.2,2.1, 3.1,3.8, 4.1]]}
 
 mass_filter = np.array([13, 13.5, 14, 14.5, 15])
 fig, axs = plt.subplots(3,1, figsize = (9,22))
-for j, line in enumerate(['o8', 'o7f', 'fe17']): 
+for j, line in enumerate(['sumlum_o8', 'sumlum_o7f', 'sumlum_fe17']): 
     nat_mean = (np.array(natasha_res[line][1]) + np.array(natasha_res[line][2]))/2
     axs[j].errorbar(natasha_res[line][0], nat_mean, xerr = 0.25, yerr = (nat_mean-natasha_res[line][1], natasha_res[line][2]-nat_mean), alpha = 0.3, color = 'k', label = 'nastasha')
     my_med = np.zeros(mass_filter.shape); my_hierr = np.zeros(mass_filter.shape); my_loerr = np.zeros(mass_filter.shape)
-
     for i, mf in enumerate(mass_filter):
         print(mf)
-        workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/xraysb_csvs_230504_{mf}_groups_1028halos' 
-        df = pd.read_csv(f'{workpath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')   
+        workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_1028halos/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}groups_1028halos' 
+        df = pd.read_csv(f'{workpath}/xray_linelum_inr200c_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230515.csv')   
         lum = df[line] 
-        my_med[i] = np.log10(np.median(lum)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5)
-        my_hierr[i] = np.log10(np.percentile(lum, 84)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5) - np.log10(np.median(lum)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5)
-        my_loerr[i] = np.log10(np.median(lum) /np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5) - np.log10(np.percentile(lum, 16)/np.array(linesbins[line]).mean()/(3.09e24)**2*1e4/1.602e-9*1e5)
-    axs[j].errorbar(mass_filter+0.25, my_med, yerr=(my_loerr, my_hierr), xerr = np.full(mass_filter.shape, 0.25),color = 'r', alpha = 0.5, label = 'my results')
+        my_med[i] = np.log10(np.median(lum)/np.array(linesbins[line]).mean()/4/np.pi/ (1.48e27)**2*1e4/1.602e-9*1e5)
+        my_hierr[i] = np.log10(np.percentile(lum, 90)/np.array(linesbins[line]).mean()/4/np.pi/ (1.48e27)**2*1e4/1.602e-9*1e5) - np.log10(np.median(lum)/np.array(linesbins[line]).mean()/4/np.pi/ (1.48e27)**2*1e4/1.602e-9*1e5)
+        my_loerr[i] = np.log10(np.median(lum)/np.array(linesbins[line]).mean()/4/np.pi/ (1.48e27)**2*1e4/1.602e-9*1e5) - np.log10(np.percentile(lum, 10)/np.array(linesbins[line]).mean()/4/np.pi/ (1.48e27)**2*1e4/1.602e-9*1e5)
+    axs[j].errorbar(mass_filter+0.25, my_med, yerr = [my_loerr, my_hierr], xerr = np.full(mass_filter.shape, 0.25),color = 'r', alpha = 0.5, label = 'my results')
+
     # axs[j].set_yscale('log')
     axs[j].set_xticks(np.arange(11.5,15.5,0.5))
     # axs[j].set_ylim(1e-3, 1e7)
@@ -53,4 +55,4 @@ for j, line in enumerate(['o8', 'o7f', 'fe17']):
     axs[j].set_xlabel(f'$\\rm log_{{10}}M_{{200c}}$ [$\\rm M_\odot$]')
     axs[j].grid(True)
     axs[j].legend()
-plt.savefig(f'{workpath}/../../fig/halomass_vs_xraylum.png')
+plt.savefig(f'{workpath}/../../../../../../fig/halomass_vs_xraylum_230515.png')

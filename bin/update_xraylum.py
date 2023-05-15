@@ -39,7 +39,7 @@ def msk_in_r200c(coor, halo_center, r200c):
 def alter_lum(wrong_flux, z_coord, redshift, z_halo_center):
     right_lumdist = z_coord-(z_halo_center-3.125)
     lum = wrong_flux * (4*np.pi*(z_coord*(1+redshift))**2)
-    right_flux = lum/right_lumdist
+    right_flux = lum/(4*np.pi*(right_lumdist*(1+redshift))**2)
     return lum, right_flux
 
 def para_alter_lum(sid):
@@ -81,9 +81,9 @@ for mf in mass_filter:
             output['sumlum_o7f'][i], output['sumlum_o8'][i], output['sumlum_fe17'][i] = np.nansum(halodoc['lum_o7f'][jointmsk & r200cmsk]), np.nansum(halodoc['lum_o8'][jointmsk & r200cmsk]), np.nansum(halodoc['lum_fe17'][jointmsk & r200cmsk])
             df1 = pd.DataFrame.from_dict(halodoc)
             df1.to_csv(f'{savepath}/xray_linelum_snapshot75_halo{halo_ids[i]}_partlum.csv')  
-        df = pd.DataFrame.from_dict(output)
-        df.to_csv(f'{savepath}/xray_linelum_inr200c_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv')
-        print(f'{savepath}/xray_linelum_inr200c_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv has been saved! ')
+    df = pd.DataFrame.from_dict(output)
+    df.to_csv(f'{savepath}/xray_linelum_inr200c_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv')
+    print(f'{savepath}/xray_linelum_inr200c_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv has been saved! ')
 
 finish = time.perf_counter()
 print(f'Finished in {(finish-start)/60:.2f} min(s)')
