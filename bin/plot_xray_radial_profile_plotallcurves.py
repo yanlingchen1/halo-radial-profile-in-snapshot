@@ -54,7 +54,7 @@ nat_mean = {'fe17':[(10,4),(100, 3),(300, 2.5),(500, 2), (1000,1), (1500, 0)], '
 # xbins = np.linspace(-1.3,5,200)
 xbins = np.linspace(-2,3.1,50)
 
-workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos/xraylum_csvs_230508_{mf}_groups_radial_pkpc_cylinder'
+workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_1028halos/xraylum_csvs_230515_{mf}_groups_radial_pkpc_cyl'
 savepath = workpath
 
 
@@ -63,11 +63,11 @@ linestyle = ['-', '--', '--']
 linesbins = {'fe17':[0.724, 0.726],'o7f':[0.574,0.576],'o8':[0.653,0.656]}
 def unit2wij_ri(value, mode, bins): # bins unit Mpc
     # last column of value is 0
-    return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/3.09e24**2*1e4/1.602e-9*1e5/(np.diff(bins**2)*3.14*1e6)*((204*(1+0.1))**2*3.14))
+    return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/4/np.pi/1.48e27**2*1e4/1.602e-9*1e5/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204)**2*3.14))
     # return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/1.48e27**2*1e4/1.602e-9*1e5/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204*(1+0.1))**2*3.14))
 
 def unit2wij_le(value, mode, bins):
-    return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/3.09e24**2/1.602e-9/(np.diff(bins**2)*3.14*1e6)*((204*(1+0.1))**2*3.14)/8.46e-7)
+    return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/4/np.pi/1.48e27**2/1.602e-9/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204)**2*3.14)/5.07e-5)
     # return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/1.48e27**2/1.602e-9/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204*(1+0.1))**2*3.14)/8.46e-7)
 
 def convert_ri_to_le(y):
@@ -80,13 +80,13 @@ for i, mode in enumerate(['fe17', 'o7f', 'o8']):
     fig, ax1 = plot_doubley(f'$\\rm pkpc$',  f'$\\rm log_{{10}}$SB [photons/s/$\\rm cm^2/sr$]',f'$\\rm log_{{10}}$SB [photons/100ks/$\\rm m^2/10arcmin^2$]', np.arange(-4.0,4.0,1.0), np.ceil(convert_le_to_ri(np.arange(-4.0,4.0,1.0))))
     bins = np.power(10,xbins)
     bins_mid = (bins[0:-1] +bins[1:])/2
-    dat = np.array(pd.read_csv(f'{workpath}/{mode}.csv'))
+    dat = np.array(pd.read_csv(f'{workpath}/lum_{mode}_incl.csv'))
     for i in range(dat.shape[1]):
-        ax1.plot(bins_mid*1000, np.log10(unit2wij_le(dat[:,i], mode, bins)), c = 'k', alpha = 0.1)
+        ax1.plot(bins_mid*1000/(1+0.1), np.log10(unit2wij_le(dat[:,i], mode, bins)), c = 'k', alpha = 0.1)
     ax1.set_xlim(10,5000)
     # ax1.set_ylim(-3.1,2)
     ax1.legend()
     ax1.set_xscale('log')
     plt.suptitle(f'halomass $10^{{{mf:.1f}-{(mf+0.5):.1f}}}$ solarmass')
-    plt.savefig(f'{workpath}/png/halomass{int(mf*10)}-{int((mf+0.5)*10)}_{mode}_xraylum_allcurves.png')
+    plt.savefig(f'{workpath}/png/halomass{int(mf*10)}-{int((mf+0.5)*10)}_lum_{mode}_incl_xraylum_allcurves.png')
     plt.close()

@@ -58,7 +58,7 @@ for halo SB.
 ## STEPS
 ### STEP1: generate particle xray flux in cylinder
 For every halo, calculate the xray flux for every particles in the cylinder.
-- The xray flux of every particle is defined as $L_{part}/(4*\pi * d_L^2)$, where luminosity distance $d_L = 1.48e27 cm$ 
+- The xray flux of every particle is defined as $L_{part}/(4*\pi * d_L^2)\ [ergs/s/cm^2]$, where luminosity distance $d_L = 1.48e27 cm$ 
 - The cylinder center is halo's gas mass center. The cylinder length is 6.25 cMpc, the radius of the cylinder is 3.5  cMpc. Defined as the same as Nastasha[1].
 - The recently heated particles are excluded. 
 - Note: I took halos in snapshot z=0 while Nastasha took halos in snapshot z=0.1.
@@ -75,5 +75,11 @@ python3 plot_xray_radial_profile.py
 
 
 ### STEP3: xray sum lum vs halo masses
-Right approach:
 Take sum luminosity of particles of halo in r200c, divide by the same luminosity distance for every halo, which is $SB_{halo} = L{halo}/4 \pi d_L$ , where $d_L  = 1.48e27 cm$.
+
+### STEP4: convert units
+$ph/cm^2/s/sr \times 10^4 \times 10^5 * (1/360*(\pi /180)^2)$ = $ph/m^2/100ks/10arcmin^2$
+
+Convert units of SB
+SB $[ergs/s/cm^2]$ -> SB $[ph/s/cm^2/sr]$ by $L_\nu/h\nu/1.602e-9/A_{annulusbins} pMpc^2 /10^6 pkpc^2/pMpc^2 *(204^2 \times 3.14 pkpc^2/ 10 arcmin^2) \times (1/3600 \times (\pi/180)^2) sr/arcmin^2 \times 10 arcmin^2$
+SB $[ergs/s/cm^2]$ -> SB $[ph/100ks/m^2/10arcmin^2]$ by $L_\nu / h\nu keV / 1.602e-9 ergs/keV \times 1e5 s/100ks \times 1e4 cm^2/m^2 /A_{annulusbins} pMpc^2 /10^6 pkpc^2/pMpc^2 *(204^2 \times 3.14 pkpc^2/ 10 arcmin^2)$
