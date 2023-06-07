@@ -91,8 +91,7 @@ def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
 
         jointmsk = ~(((nH_dens.value<1e-8) | (nH_dens.value>1e6)) | ((data.gas.temperatures.value<1e5) | (data.gas.temperatures.value>np.power(10,9.5))) | ((abs(t_agn-t_par).value*1000<15) & (~np.isnan(a_agn))& ((np.power(10, 6.94455)<data.gas.temperatures.value) | (np.power(10, 8.24455)>data.gas.temperatures.value))))
         print(np.sum(jointmsk))
-        flux = lum[0]/(4*np.pi*(data.gas.coordinates[:,2]*(1+z))**2)
-        return lum[0], flux, jointmsk, abun_to_solar
+        return lum[0], jointmsk, abun_to_solar
 
 xbins = np.linspace(-2,3.1,50)
 radii_bins = np.power(10, xbins) * 1 #Mpc
@@ -141,8 +140,8 @@ interp.load_table()
 print('table_loaded')
 
 np.random.seed(0)
-mass_filter = np.array([13.0, 13.5, 14.0, 14.5, 15.0])
-halonum = 1028
+mass_filter = np.array([13.0])
+halonum = 50
 for mf in mass_filter:
     where = (m200c_sp < np.power(10,mf+0.5)) & (m200c_sp >= np.power(10,mf)) & (gasmass_center[:,0] > 50) & (gasmass_center[:,0] < 950) & (gasmass_center[:,1] > 50) & (gasmass_center[:,1] < 950) & (gasmass_center[:,2] > 50) & (gasmass_center[:,2] < 950)
     if np.sum(where)>halonum:
@@ -163,9 +162,9 @@ for mf in mass_filter:
     output['o7f'] = np.zeros(len(halo_sel_ids))
     output['o8'] = np.zeros(len(halo_sel_ids))
 
-    savepath = f'{workpath}/results/xraysb_csvs_230504_{mf}_groups_1028halos'
+    savepath = f'{workpath}/results/xraysb_csvs_230523_{mf}_groups_50halos_cyl'
     os.makedirs(savepath, exist_ok = True)
-    with concurrent.futures.ProcessPoolExecutor(64) as executor:
+    with concurrent.futures.ProcessPoolExecutor(8) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
             halodoc = {}
             halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result

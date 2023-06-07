@@ -67,8 +67,7 @@ def unit2wij_ri(value, mode, bins): # bins unit Mpc
     # return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/1.48e27**2*1e4/1.602e-9*1e5/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204*(1+0.1))**2*3.14))
 
 def unit2wij_le(value, mode, bins):
-    return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/4/np.pi/1.48e27**2/1.602e-9/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204)**2*3.14)/5.07e-5)
-    # return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/1.48e27**2/1.602e-9/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204*(1+0.1))**2*3.14)/8.46e-7)
+    return np.log10(value[:-1]/np.array(linesbins[mode]).mean()/4/np.pi/1.48e27**2/1.602e-9/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204)**2*3.14)/8.46e-7)
 
 def convert_ri_to_le(y):
     return np.log10(np.power(10,y)/1e4/1e5 * 1.1818e6)

@@ -3,6 +3,7 @@ import numpy as np
 import numpy as np
 import matplotlib.pyplot as plt
 import os 
+import time
 
 def plot_doubley(xlab, ylab, y2lab, y1tick,  y2tick):
     # Create the figure and the first axis
@@ -61,26 +62,24 @@ savepath = workpath
 linestyle = ['-', '--', '--']
 # new linesbins
 linesbins = {'fe17':[0.724, 0.726],'o7f':[0.574,0.576],'o8':[0.653,0.656]}
-def unit2wij_ri(value, mode, bins): # bins unit Mpc
-    # last column of value is 0
-    # return np.log10(value[:-1]/np.array(linesbins[line]).mean()/3.09e24**2*1e4/1.602e-9*1e5/(np.diff(bins**2)*3.14*1e6)*((204*(1+0.1))**2*3.14))
-    return np.log10(value[:-1]/np.array(linesbins[line]).mean()/4/np.pi/1.48e27**2*1e4/1.602e-9*1e5/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204*(1+0.1))**2*3.14))
 
 
-def unit2wij_le(value, mode, bins):
+def unit2wij_le(value, line, bins):
     # return np.log10(value[:-1]/np.array(linesbins[line]).mean()/3.09e24**2/1.602e-9/(np.diff(bins**2)*3.14*1e6)*((204*(1+0.1))**2*3.14)/8.46e-7)
-    return np.log10(value[:-1]/np.array(linesbins[line]).mean()/4/np.pi/1.48e27**2/1.602e-9/(np.diff((bins/(1+0.1))**2)*3.14*1e6)*((204*(1+0.1))**2*3.14)/(1/360*(np.pi/180)**2))
-
+    return np.log10(value[:-1]/np.array(linesbins[line]).mean()/4/np.pi/1.48e27**2/1.602e-9/(np.diff((bins/(1+0.1))**2)*np.pi*1e6)*13067.424/(1/3600*(np.pi/180)**2) )#*(0.5277**2)/((np.pi/180)**2/3600/3600)) # 12926.231*10
 def convert_ri_to_le(y):
     return np.log10(np.power(10,y)/1e4/1e5/(1/360*(np.pi/180)**2))
-def convert_le_to_ri(y):
-    return np.log10(np.power(10,y)*1e4*1e5 *(1/360*(np.pi/180)**2))
+
+def unit2wij_ri(value, mode, bins): # bins unit Mpc
+    return np.log10(value[:-1]/np.array(linesbins[line]).mean()/4/np.pi/1.48e27**2*1e4/1.602e-9*1e5/(np.diff((bins/(1+0.1))**2)*np.pi*1e6)*13067.424*10)
+
 # plt.ylabel(f'$\\rm log_{{10}}$SB [photons/100ks/$\\rm m^2/10arcmin^2$]')
 # plt.xlabel(f'$\\rm log_{{10}}$r/r200c')
 for i, line in enumerate(['fe17', 'o7f', 'o8']):
     for part in ['incl', 'excl']:
         mode = f'lum_{line}_{part}'
-        fig, ax1 = plot_doubley(f'$\\rm pkpc$',  f'$\\rm log_{{10}}$SB [photons/s/$\\rm cm^2/sr$]',f'$\\rm log_{{10}}$SB [photons/100ks/$\\rm m^2/10arcmin^2$]', np.arange(-4.0,4.0,1.0), np.ceil(convert_le_to_ri(np.arange(-4.0,4.0,1.0))))
+        # fig, ax1 = plot_doubley(f'$\\rm pkpc$',  f'$\\rm log_{{10}}$SB [photons/s/$\\rm cm^2/sr$]',f'$\\rm log_{{10}}$SB [photons/100ks/$\\rm m^2/10arcmin^2$]', np.arange(-4.0,4.0,1.0), np.ceil(convert_le_to_ri(np.arange(-4.0,4.0,1.0))))
+        fig, ax1 = plt.subplots(1,1, figsize = (8,8))
         dat = pd.read_csv(f'{workpath}/{mode}.csv')
         dat[~np.isfinite(dat)] = 0
         prop_cts = np.sum(dat>0, axis=1)[:-1]
@@ -89,10 +88,14 @@ for i, line in enumerate(['fe17', 'o7f', 'o8']):
         # print(np.sum(cts_msk))
         bins = np.power(10,xbins)
         bins_mid = (bins[0:-1] +bins[1:])/2
-        prop_med = unit2wij_le(np.nanmedian(dat, axis=1), mode, bins)
-        prop_hi = unit2wij_le(np.percentile(dat, 84, axis=1), mode, bins)
-        prop_lo = unit2wij_le(np.percentile(dat, 16, axis=1), mode, bins)
-        prop_mean = unit2wij_le(np.nanmean(dat, axis=1), mode, bins)
+        
+        prop_med = convert_ri_to_le(unit2wij_ri(np.nanmedian(dat, axis=1), line, bins))
+        prop_hi = convert_ri_to_le(unit2wij_ri(np.percentile(dat, 84, axis=1), line, bins))
+        prop_lo = convert_ri_to_le(unit2wij_ri(np.percentile(dat, 16, axis=1), line, bins))
+        prop_mean = convert_ri_to_le(unit2wij_ri(np.nanmean(dat, axis=1), line, bins))
+        print(prop_med.min(), prop_med.max())
+        print(np.nanmin(dat), np.nanmax(dat))
+        print(1/10026.12*1/360*(np.pi/180)**2, (1/(204*(1+0.1))**2*3.14)/8.46e-7)
         doc  = {}
         doc['med']= prop_med
         doc['hi'] = prop_hi
@@ -115,6 +118,8 @@ for i, line in enumerate(['fe17', 'o7f', 'o8']):
         ax1.set_ylim(-3.1,2)
         ax1.legend()
         ax1.set_xscale('log')
-        plt.suptitle(f'halomass $10^{{{mf:.1f}-{(mf+0.5):.1f}}}$ solarmass {mode}')
-        plt.savefig(f'{workpath}/png/halomass{int(mf*10)}-{int((mf+0.5)*10)}_{mode}_xraylum_medians.png')
-        plt.close()
+        ax1.set_ylabel(f'$\\rm log_{{10}}$SB [photons/$\\rm cm^2/s/sr$]')
+        ax1.set_xlabel(f'$\\rm pkpc$')
+    plt.suptitle(f'halomass $10^{{{mf:.1f}-{(mf+0.5):.1f}}}$ solarmass {line}')
+    plt.savefig(f'{workpath}/png/halomass{int(mf*10)}-{int((mf+0.5)*10)}_{line}_xraylum_medians_1yaxis_left.png')
+    plt.close()

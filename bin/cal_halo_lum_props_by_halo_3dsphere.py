@@ -36,10 +36,13 @@ def halo_part_in_r200c_nb(coor, halo_center, r200c):
             d2 += (coor[i,j] - halo_center[j])**2
         where[i] = d2 < (6*r200c)**2
     return where
+
 def interpdens2nH(interpdens, hydrogen_massfrac, redshifts):
     # after np.log10, unyt unit is lost
     scale_factor = 1/(redshifts+1)
     return interpdens.to(g/cm**3) * hydrogen_massfrac / mp.to(g) * (1/scale_factor**3) 
+
+
 def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
     """
     This function compute xray luminosity for particle fall in observed energy bin at z=0
@@ -128,7 +131,7 @@ with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/SOAP
 
 # define snapshot file
 filename = f'/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/snapshots/flamingo_00{int(77-reds/0.05)}/flamingo_00{int(77-reds/0.05)}.hdf5'
-workpath = '/cosma8/data/dp004/dc-chen3/work/bin/gen_xray_pipeline/230318/cal_halo_lum_by_halo_230331'
+workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/bin/cal_halo_lum_by_halo_3dsphere'
 
 
 # preload table
@@ -139,7 +142,7 @@ print('table_loaded')
 
 np.random.seed(0)
 mass_filter = np.array([13.0])
-halonum = 128
+halonum = 50
 for mf in mass_filter[::-1]:
 # mf = 
     where = (m200c_sp < np.power(10,mf+0.5)) & (m200c_sp >= np.power(10,mf)) & (gasmass_center[:,0] > 50) & (gasmass_center[:,0] < 950) & (gasmass_center[:,1] > 50) & (gasmass_center[:,1] < 950) & (gasmass_center[:,2] > 50) & (gasmass_center[:,2] < 950)
@@ -162,9 +165,9 @@ for mf in mass_filter[::-1]:
     output['o7f'] = np.zeros(len(halo_sel_ids))
     output['o8'] = np.zeros(len(halo_sel_ids))
 
-    savepath = f'{workpath}/xraylum_csvs_230419_{mf}_groups_128halos'
+    savepath = f'{workpath}/xraylum_csvs_230523_{mf}_groups_sph_50halos'
     os.makedirs(savepath, exist_ok = True)
-    with concurrent.futures.ProcessPoolExecutor(32) as executor:
+    with concurrent.futures.ProcessPoolExecutor(8) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
             halodoc = {}
             halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
@@ -172,8 +175,9 @@ for mf in mass_filter[::-1]:
             df1 = pd.DataFrame.from_dict(halodoc)
             df1.to_csv(f'{savepath}/xray_linelum_snapshot75_halo{np.array(halo_sel_ids-1, dtype = int)[i]}_partlum_230404.csv')  
     df = pd.DataFrame.from_dict(output)
-    df.to_csv(f'{savepath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
-    print(f'{savepath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv has been saved! ')
+    df.to_csv(f'{savepath}/xray_linelum_snapshot77_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
+    print(f'{savepath}/xray_linelum_snapshot77_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv has been saved! ')
+
 # ## for test
 # cal_halo_summass(int(halo_sel_ids[0]-1))
 finish = time.perf_counter()
