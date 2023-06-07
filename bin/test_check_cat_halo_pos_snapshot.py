@@ -16,6 +16,7 @@ from astropy.cosmology import FlatLambdaCDM, z_at_value
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import LogNorm
 import numba as nb
+from tqdm import tqdm
 
 @nb.jit(nopython=True)
 def halo_part_in_r200c_nb(coor, halo_center, r200c):
@@ -33,7 +34,7 @@ workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot
 # soap
 nside = 1024
 snapnum = 75
-m200c_filter = 15
+m200c_filter = 15.4
 
 print('loading soap cat...')
 # first make filters via mass, then read coords and radius only based on mass
@@ -51,8 +52,8 @@ R200 = R200[where]
 snapcoor = snapcoor[where]
 
 reds = 0.1
-snapshot_datapath = '/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/snapshots/'
-snapshot_filename = f'{snapshot_datapath}/flamingo_00{int(77-reds/0.05)}/flamingo_00{int(77-reds/0.05)}.hdf5'
+snapshot_datapath = '/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/snapshots_downsampled/'
+snapshot_filename = f'{snapshot_datapath}/flamingo_00{int(77-reds/0.05)}.hdf5'
 workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot'
 savepath = f'{workpath}/test/png'
 
@@ -62,7 +63,7 @@ from swiftsimio import load
 data = load(snapshot_filename)
 print(data.gas.masses.units)
 halo_masses = []
-for id in range(len(R200)):
+for id in tqdm(range(len(R200))):
     where = halo_part_in_r200c_nb(data.gas.coordinates.value, snapcoor[id], R200[id])
     halo_masses.append(np.sum(data.gas.masses[where]))
 

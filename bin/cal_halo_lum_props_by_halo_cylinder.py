@@ -116,8 +116,8 @@ start = time.perf_counter()
 print('loading soap cat...')
 # Caution!!! only redshift 0 soap halo position is correct, for larger redshifts halo postions are wrong!
 
-reds = 0
-with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/SOAP/halo_properties_00{int(77-reds/0.05)}.hdf5", 'r') as catalogue_soap:
+reds = 0.1
+with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N3600/HYDRO_FIDUCIAL/SOAP/halo_properties_00{int(77-reds/0.05)}.hdf5", 'r') as catalogue_soap:
     soap_ids = np.array(catalogue_soap["VR/ID"][()])
     m200c_sp = catalogue_soap["SO/200_crit/TotalMass"][()]
     r200c_sp = catalogue_soap["SO/200_crit/SORadius"][()]
@@ -129,7 +129,7 @@ with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/SOAP
 
 
 # define snapshot file
-filename = f'/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/snapshots/flamingo_00{int(77-reds/0.05)}/flamingo_00{int(77-reds/0.05)}.hdf5'
+filename = f'/cosma8/data/dp004/flamingo/Runs/L1000N3600/HYDRO_FIDUCIAL/snapshots/flamingo_00{int(77-reds/0.05)}/flamingo_00{int(77-reds/0.05)}.hdf5'
 workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot'
 
 
@@ -140,7 +140,7 @@ interp.load_table()
 print('table_loaded')
 
 np.random.seed(0)
-mass_filter = np.array([13.0])
+mass_filter = np.array([12.5, 13.0, 13.5])
 halonum = 50
 for mf in mass_filter:
     where = (m200c_sp < np.power(10,mf+0.5)) & (m200c_sp >= np.power(10,mf)) & (gasmass_center[:,0] > 50) & (gasmass_center[:,0] < 950) & (gasmass_center[:,1] > 50) & (gasmass_center[:,1] < 950) & (gasmass_center[:,2] > 50) & (gasmass_center[:,2] < 950)
@@ -162,18 +162,26 @@ for mf in mass_filter:
     output['o7f'] = np.zeros(len(halo_sel_ids))
     output['o8'] = np.zeros(len(halo_sel_ids))
 
-    savepath = f'{workpath}/results/xraysb_csvs_230523_{mf}_groups_50halos_cyl'
+    savepath = f'{workpath}/results/xraysb_csvs_230607_{mf}_groups_1028halos_cyl'
     os.makedirs(savepath, exist_ok = True)
-    with concurrent.futures.ProcessPoolExecutor(8) as executor:
-        for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
-            halodoc = {}
-            halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
-            output['o7f'][i], output['o8'][i], output['fe17'][i] = np.nansum(halodoc['o7f'][halodoc['jointmsk']]), np.nansum(halodoc['o8'][halodoc['jointmsk']]), np.nansum(halodoc['fe17'][halodoc['jointmsk']])
-            df1 = pd.DataFrame.from_dict(halodoc)
-            df1.to_csv(f'{savepath}/xray_linelum_snapshot75_halo{np.array(halo_sel_ids-1, dtype = int)[i]}_partlum_230404.csv')  
+    ######## for test ##########
+    halodoc = {}
+    i = int(halo_sel_ids[0]-1)
+    halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = cal_halo_summass(i)
+    output['o7f'][i], output['o8'][i], output['fe17'][i] = np.nansum(halodoc['o7f'][halodoc['jointmsk']]), np.nansum(halodoc['o8'][halodoc['jointmsk']]), np.nansum(halodoc['fe17'][halodoc['jointmsk']])
+    df1 = pd.DataFrame.from_dict(halodoc)
+    df1.to_csv(f'{savepath}/xray_linelum_snapshot{int(77-reds/0.05)}_halo{np.array(halo_sel_ids-1, dtype = int)[i]}_partlum.csv')  
+    ########## formal ###########
+    # with concurrent.futures.ProcessPoolExecutor(128) as executor:
+    #     for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
+    #         halodoc = {}
+    #         halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
+    #         output['o7f'][i], output['o8'][i], output['fe17'][i] = np.nansum(halodoc['o7f'][halodoc['jointmsk']]), np.nansum(halodoc['o8'][halodoc['jointmsk']]), np.nansum(halodoc['fe17'][halodoc['jointmsk']])
+    #         df1 = pd.DataFrame.from_dict(halodoc)
+    #         df1.to_csv(f'{savepath}/xray_linelum_snapshot{int(77-reds/0.05)}_halo{np.array(halo_sel_ids-1, dtype = int)[i]}_partlum.csv')  
     df = pd.DataFrame.from_dict(output)
-    df.to_csv(f'{savepath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
-    print(f'{savepath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv has been saved! ')
+    df.to_csv(f'{savepath}/xray_linelum_snapshot{int(77-reds/0.05)}_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv')
+    print(f'{savepath}/xray_linelum_snapshot{int(77-reds/0.05)}_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv has been saved! ')
 
 finish = time.perf_counter()
 print(f'Finished in {(finish-start)/60:.2f} min(s)')
