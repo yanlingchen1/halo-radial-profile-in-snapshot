@@ -3,7 +3,7 @@ import numpy as np
 import numba as nb
 import os
 import concurrent.futures
-
+from datetime import datetime
 @nb.jit(nopython=True)
 def msk_in_cylinder(coor, halo_center, r1, r2, z):
     n = 2
@@ -16,10 +16,11 @@ def msk_in_cylinder(coor, halo_center, r1, r2, z):
     return where
    
 
-for mf in [12.5, 13, 13.5]:
+for mf in [13.0, 13.5]:
+    print(f'{datetime.now()}: Program begins!')
     olddatapath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos'
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_1028halos'
-    savepath = f'{workpath}/xraylum_csvs_230515_{mf}_groups_radial_pkpc_cyl'
+    savepath = f'{workpath}/xraylum_csvs_230608_{mf}_groups_radial_pkpc_cyl'
     os.makedirs(savepath, exist_ok = True)
     df_halo = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
     haloids = df_halo['halo_ids']
@@ -27,7 +28,7 @@ for mf in [12.5, 13, 13.5]:
     halo_r200cs = df_halo['r200c']
     xbins_mean = np.arange(-2,3.25,0.25)
     xbins_med = np.arange(-2,3.1,0.1)
-    props_names = ['lum_o7f','lum_o8','lum_fe17', 'cts']
+    props_names = ['part_masses','part_dens','part_temperatures', 'cts']
     xbins_names = ['010dex', '025dex']
     for q, xbins in enumerate([xbins_mean, xbins_med]):
         def cal_xraylum_excl(k):
@@ -42,7 +43,7 @@ for mf in [12.5, 13, 13.5]:
             for j in range(len(bins)-1):
                 radmsk = msk_in_cylinder(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
                 if prop != 'cts':
-                    prop_arr[j] = np.nansum(newdf_part[prop][np.array(olddf_part['jointmsk']) & radmsk])
+                    prop_arr[j] = np.nansum(olddf_part[prop][np.array(olddf_part['jointmsk']) & radmsk])
                     return prop_arr
                 else:
                     cts_arr[j] = np.nansum(np.array(olddf_part['jointmsk']) & radmsk)
@@ -59,7 +60,7 @@ for mf in [12.5, 13, 13.5]:
             for j in range(len(bins)-1):
                 radmsk = msk_in_cylinder(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
                 if prop != 'cts':
-                    prop_arr[j] = np.nansum(newdf_part[prop][radmsk])
+                    prop_arr[j] = np.nansum(olddf_part[prop][radmsk])
                     return prop_arr
                 else:
                     cts_arr[j] = np.nansum(radmsk)
@@ -74,7 +75,7 @@ for mf in [12.5, 13, 13.5]:
             # for i in range(2):
             #     print(cal_xraylum_excl(i))
             #     print(cal_xraylum_incl(i))
-            with concurrent.futures.ProcessPoolExecutor(32) as executor:
+            with concurrent.futures.ProcessPoolExecutor(16) as executor:
                 for k, result in enumerate(executor.map(cal_xraylum_excl,np.arange(len(haloids)))):
                     output[prop][:,k] = result
                 for k, result in enumerate(executor.map(cal_xraylum_incl,np.arange(len(haloids)))):
@@ -84,3 +85,4 @@ for mf in [12.5, 13, 13.5]:
             df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl.csv')
             df = pd.DataFrame.from_dict(output1[prop])
             df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl.csv')
+            print(f'{datetime.now()}: csv has been saved!')
