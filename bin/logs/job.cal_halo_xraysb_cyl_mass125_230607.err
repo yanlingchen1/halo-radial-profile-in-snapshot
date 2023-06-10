@@ -126,33 +126,3 @@
   outputs = ufunc(*inputs)
 /cosma/local/Python/3.10.1/lib/python3.10/site-packages/numpy/lib/function_base.py:2246: RuntimeWarning: invalid value encountered in _integral_lookback_time (vectorized)
   outputs = ufunc(*inputs)
-concurrent.futures.process._RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/cosma/local/Python/3.10.1/lib/python3.10/concurrent/futures/process.py", line 243, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-  File "/cosma/local/Python/3.10.1/lib/python3.10/concurrent/futures/process.py", line 202, in _process_chunk
-    return [fn(*args) for args in chunk]
-  File "/cosma/local/Python/3.10.1/lib/python3.10/concurrent/futures/process.py", line 202, in <listcomp>
-    return [fn(*args) for args in chunk]
-  File "/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/bin/cal_halo_lum_props_by_halo_cylinder_125.py", line 111, in cal_halo_summass
-    lumdict[line], jointmsk, abun_to_solar = compute_lum(linesbins[line], data, 'lines', reds, msk, nH_densities)
-  File "/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/bin/cal_halo_lum_props_by_halo_cylinder_125.py", line 71, in compute_lum
-    lum, __, abun_to_solar = interp_xray(
-ValueError: not enough values to unpack (expected 3, got 2)
-"""
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/bin/cal_halo_lum_props_by_halo_cylinder_125.py", line 177, in <module>
-    for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
-  File "/cosma/local/Python/3.10.1/lib/python3.10/concurrent/futures/process.py", line 567, in _chain_from_iterable_of_lists
-    for element in iterable:
-  File "/cosma/local/Python/3.10.1/lib/python3.10/concurrent/futures/_base.py", line 608, in result_iterator
-    yield fs.pop().result()
-  File "/cosma/local/Python/3.10.1/lib/python3.10/concurrent/futures/_base.py", line 438, in result
-    return self.__get_result()
-  File "/cosma/local/Python/3.10.1/lib/python3.10/concurrent/futures/_base.py", line 390, in __get_result
-    raise self._exception
-ValueError: not enough values to unpack (expected 3, got 2)

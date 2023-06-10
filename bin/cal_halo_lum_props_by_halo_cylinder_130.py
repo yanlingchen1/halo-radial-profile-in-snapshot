@@ -141,7 +141,7 @@ interp.load_table()
 print('table_loaded')
 
 np.random.seed(0)
-mass_filter = np.array([13.5])
+mass_filter = np.array([13.0])
 halonum = 1028
 for mf in mass_filter:
     where = (m200c_sp < np.power(10,mf+0.5)) & (m200c_sp >= np.power(10,mf)) & (gasmass_center[:,0] > 50) & (gasmass_center[:,0] < 950) & (gasmass_center[:,1] > 50) & (gasmass_center[:,1] < 950) & (gasmass_center[:,2] > 50) & (gasmass_center[:,2] < 950)
@@ -151,8 +151,6 @@ for mf in mass_filter:
     else:
         halo_sel_ids = soap_ids[where]
 
-    # not repeat calculate previous results
-    halo_sel_ids = halo_sel_ids[27:]
     output = {}
     output['halo_ids'] = halo_sel_ids
     output['r200c'] = r200c_sp[np.array(halo_sel_ids-1, dtype = int)]
