@@ -66,6 +66,7 @@ for mf in [13.0, 13.5]:
     xbins_names = ['010dex', '025dex']
 
     for q, xbins in enumerate([xbins_mean, xbins_med]):
+        print(f'{datetime.now()}:xbins')
         output = {}
         output1 = {}
         for prop in props_names:
@@ -73,6 +74,7 @@ for mf in [13.0, 13.5]:
             output1[prop] = np.zeros((len(xbins), len(haloids)))
 
         with concurrent.futures.ProcessPoolExecutor(16) as executor:
+            print(f'{datetime.now()}:prop')
             args_excl = [(k, prop, halo_centers[k], xbins, pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid - 1)}_partlum_230404.csv'))
                          for k, haloid in enumerate(haloids)]
             args_incl = [(k, prop, halo_centers[k], xbins, pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid - 1)}_partlum_230404.csv'))
