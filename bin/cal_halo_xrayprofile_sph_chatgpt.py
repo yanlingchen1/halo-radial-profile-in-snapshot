@@ -18,7 +18,7 @@ def msk_in_sph(coor, halo_center, r1, r2):
     return where
 
 def cal_xraylum_excl(args):
-    k, prop, halo_cen, xbins, olddf_part = args
+    prop, halo_cen, xbins, olddf_part = args
     bins = np.power(10, xbins) * 1  # Mpc
     prop_arr = np.zeros(len(bins))
     cts_arr = np.zeros(len(bins))
@@ -35,7 +35,7 @@ def cal_xraylum_excl(args):
         return cts_arr
 
 def cal_xraylum_incl(args):
-    k, prop, halo_cen, xbins, olddf_part = args
+    prop, halo_cen, xbins, olddf_part = args
     bins = np.power(10, xbins) * 1  # Mpc
     prop_arr = np.zeros(len(bins))
     cts_arr = np.zeros(len(bins))
@@ -67,33 +67,29 @@ for mf in [13.0, 13.5]:
     xbins_names = ['025dex', '010dex']
 
     for q, xbins in enumerate([xbins_mean, xbins_med]):
-        print(f'{datetime.now()}:xbins')
-        output = {}
-        output1 = {}
+        print(f'{datetime.now()}:{xbins}')   
         for prop in props_names:
-            output[prop] = np.zeros((len(xbins), len(haloids)))
-            output1[prop] = np.zeros((len(xbins), len(haloids)))
+            print(f'{datetime.now()}:{prop}')   
+            output = np.zeros((len(xbins), len(haloids)))
+            output1 = np.zeros((len(xbins), len(haloids)))
+            with concurrent.futures.ProcessPoolExecutor(16) as executor:
+                args_excl = [(prop, halo_centers[k], xbins, pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid - 1)}_partlum_230404.csv'))
+                            for k, haloid in enumerate(haloids)]
+                args_incl = [(prop, halo_centers[k], xbins, pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid - 1)}_partlum_230404.csv'))
+                            for k, haloid in enumerate(haloids)]
 
-        with concurrent.futures.ProcessPoolExecutor(16) as executor:
-            args_excl = [(k, prop, halo_centers[k], xbins, pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid - 1)}_partlum_230404.csv'))
-                         for k, haloid in enumerate(haloids)]
-            args_incl = [(k, prop, halo_centers[k], xbins, pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid - 1)}_partlum_230404.csv'))
-                         for k, haloid in enumerate(haloids)]
+                results_excl = executor.map(cal_xraylum_excl, args_excl)
+                results_incl = executor.map(cal_xraylum_incl, args_incl)
 
-            results_excl = executor.map(cal_xraylum_excl, args_excl)
-            results_incl = executor.map(cal_xraylum_incl, args_incl)
+                for k, result in enumerate(results_excl):
+                    output[:, k] = result
 
-            for k, result in enumerate(results_excl):
-                output[props_names[k]][:, k] = result
+                for k, result in enumerate(results_incl):
+                    output1[:, k] = result
+                df = pd.DataFrame.from_dict(output)
+                df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl_sph.csv')
 
-            for k, result in enumerate(results_incl):
-                output1[props_names[k]][:, k] = result
-
-        for prop in props_names:
-            df = pd.DataFrame.from_dict(output[prop])
-            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl_sph.csv')
-
-            df = pd.DataFrame.from_dict(output1[prop])
-            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl_sph.csv')
+                df = pd.DataFrame.from_dict(output1)
+                df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl_sph.csv')
 
         print(f'{datetime.now()}: csv has been saved!')

@@ -66,24 +66,23 @@ for mf in [13.0, 13.5]:
                     cts_arr[j] = np.nansum(radmsk)
                     return cts_arr
 
-        output = {}
-        output1 = {}
         for prop in props_names:
-            output[prop] = np.zeros((len(xbins), len(haloids)))
-            output1[prop] = np.zeros((len(xbins), len(haloids)))
+            output = np.zeros((len(xbins), len(haloids)))
+            output1 = np.zeros((len(xbins), len(haloids)))
             ## testing
             # for i in range(2):
             #     print(cal_xraylum_excl(i))
             #     print(cal_xraylum_incl(i))
             with concurrent.futures.ProcessPoolExecutor(16) as executor:
                 para = zip(np.arange(len(haloids)), [prop] * len(haloids))
+                print( para[0])
                 for k, result in enumerate(executor.map(cal_xraylum_excl, *para)):
-                    output[prop][:,k] = result
+                    output[:,k] = result
                 for k, result in enumerate(executor.map(cal_xraylum_incl, *para)):
-                    output1[prop][:,k] = result
+                    output1[:,k] = result
             
-            df = pd.DataFrame.from_dict(output[prop])
+            df = pd.DataFrame.from_dict(output)
             df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl_sph.csv')
-            df = pd.DataFrame.from_dict(output1[prop])
+            df = pd.DataFrame.from_dict(output1)
             df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl_sph.csv')
             print(f'{datetime.now()}: csv has been saved!')

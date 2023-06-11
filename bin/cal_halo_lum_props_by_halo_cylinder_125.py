@@ -181,6 +181,7 @@ for mf in mass_filter:
     ######### formal ###########
     with concurrent.futures.ProcessPoolExecutor(8) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass, np.array(halo_sel_ids-1, dtype = int))):
+            print(igit)
             halodoc = {}
             if result is None:
                 continue
