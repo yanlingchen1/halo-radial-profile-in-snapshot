@@ -82,7 +82,7 @@ def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
     )
     if lum is False:
         print('halo not bright in xray')
-        return np.zeros(3)
+        return 0,0,0
     else:
         lum = lum.transpose()
         a_agn = data.gas.last_agnfeedback_scale_factors
