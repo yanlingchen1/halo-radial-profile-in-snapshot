@@ -64,7 +64,7 @@ for mf in [13.0, 13.5]:
     xbins_mean = np.arange(-2, 3.25, 0.25)
     xbins_med = np.arange(-2, 3.1, 0.1)
     props_names = ['part_masses', 'part_dens', 'part_temperatures', 'cts']
-    xbins_names = ['010dex', '025dex']
+    xbins_names = ['025dex', '010dex']
 
     for q, xbins in enumerate([xbins_mean, xbins_med]):
         print(f'{datetime.now()}:xbins')

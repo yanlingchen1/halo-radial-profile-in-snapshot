@@ -152,7 +152,7 @@ for mf in mass_filter:
         halo_sel_ids = soap_ids[where]
 
     # not repeat calculate previous results
-    halo_sel_ids = halo_sel_ids[27:]
+    # halo_sel_ids = halo_sel_ids[27:]
     output = {}
     output['halo_ids'] = halo_sel_ids
     output['r200c'] = r200c_sp[np.array(halo_sel_ids-1, dtype = int)]
@@ -175,7 +175,7 @@ for mf in mass_filter:
     # df1 = pd.DataFrame.from_dict(halodoc)
     # df1.to_csv(f'{savepath}/xray_linelum_snapshot{int(78-reds/0.05)}_halo{np.array(halo_sel_ids-1, dtype = int)[0]}_partlum.csv')  
     ######### formal ###########
-    with concurrent.futures.ProcessPoolExecutor(64) as executor:
+    with concurrent.futures.ProcessPoolExecutor(8) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
             halodoc = {}
             halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
