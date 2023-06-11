@@ -67,7 +67,7 @@ for mf in [13.0, 13.5]:
     xbins_names = ['025dex', '010dex']
 
     for q, xbins in enumerate([xbins_mean, xbins_med]):
-        print(f'{datetime.now()}:{xbins}')   
+        print(f'{datetime.now()}:{xbins_names[q]}')   
         for prop in props_names:
             print(f'{datetime.now()}:{prop}')   
             output = np.zeros((len(xbins), len(haloids)))
