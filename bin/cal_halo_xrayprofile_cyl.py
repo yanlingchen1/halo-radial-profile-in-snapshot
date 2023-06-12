@@ -8,21 +8,14 @@ import matplotlib.pyplot as plt
 
 
 @nb.jit(nopython=True)
-def msk_in_sph(coor, halo_center, r1, r2):
-    n = 3
-    print(coor.shape)
+def msk_in_cyl(coor, halo_center, r1, r2, z):
+    n = 2
     where = np.empty(coor.shape[0], dtype=np.bool_)
     for i in range(coor.shape[0]):
         d2 = 0.0
-        for k in range(n):
-            d2 += (coor[i,k] - halo_center[k])**2
-        where[i] = (d2 < r2**2) #& (d2 >= r1**2)
-    
-    return where
-   
-def msk_in_sph_new(coor, halo_center, r1, r2):
-    dists = np.linalg.norm(coor-halo_center, axis=1)
-    where = (dists< r2) & (dists>=r1)
+        for j in range(n):
+            d2 += (coor[i,j] - halo_center[j])**2
+        where[i] = (d2 < r2**2) & (d2 >= r1**2) & (coor[i,2] <= (halo_center[2]+z)) & (coor[i,2] >= (halo_center[2]-z))
     return where
 
 for mf in [13.0, 13.5]:
@@ -50,7 +43,7 @@ for mf in [13.0, 13.5]:
                 olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv')
                 arr  = np.zeros(len(bins))
                 for j in range(len(bins)-1):
-                    radmsk = msk_in_sph_new(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1])
+                    radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
                     if prop != 'cts':
                         arr[j] = np.nansum(olddf_part[prop][np.array(olddf_part['jointmsk']) & radmsk])
                     else:
@@ -58,7 +51,6 @@ for mf in [13.0, 13.5]:
                 return arr
            
             def cal_xraylum_incl(k):
-                print(k)
                 haloid = haloids[k]
                 halo_cen = halo_centers[k]
                 # print(f'cal halo{haloid} ...')
@@ -66,7 +58,7 @@ for mf in [13.0, 13.5]:
                 arr = np.zeros(len(bins))
                 olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv')
                 for j in range(len(bins)-1):
-                    radmsk = msk_in_sph_new(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1])
+                    radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
                     if prop != 'cts':
                         arr[j] = np.nansum(olddf_part[prop][radmsk])
                     else:
@@ -87,7 +79,7 @@ for mf in [13.0, 13.5]:
                     output1[:,k] = result
             
             df = pd.DataFrame.from_dict(output)
-            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl_sph.csv')
+            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl_cyl.csv')
             df = pd.DataFrame.from_dict(output1)
-            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl_sph.csv')
+            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl_cyl.csv')
             print(f'{datetime.now()}: csv has been saved!')
