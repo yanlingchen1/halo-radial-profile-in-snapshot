@@ -35,7 +35,6 @@ for mf in [13.0, 13.5]:
     for q, xbins in enumerate([xbins_mean, xbins_med]):
         for prop in props_names:
             def cal_xraylum_excl(k):
-                print(f'{datetime.now()}:{k}')
                 haloid = haloids[k]
                 halo_cen = halo_centers[k]
                 # print(f'cal halo{haloid} ...')
@@ -51,7 +50,6 @@ for mf in [13.0, 13.5]:
                 return arr
            
             def cal_xraylum_incl(k):
-                haloid = haloids[k]
                 halo_cen = halo_centers[k]
                 # print(f'cal halo{haloid} ...')
                 bins = np.power(10, xbins) * 1 #Mpc
@@ -71,7 +69,7 @@ for mf in [13.0, 13.5]:
 
             output = np.zeros((len(xbins), len(haloids)))
             output1 = np.zeros((len(xbins), len(haloids)))
-            with concurrent.futures.ProcessPoolExecutor(64) as executor:
+            with concurrent.futures.ProcessPoolExecutor(16) as executor:
                 for k, result in enumerate(executor.map(cal_xraylum_excl, np.arange(len(haloids)))):
                     output[:,k] = result
                 for k, result in enumerate(executor.map(cal_xraylum_incl, np.arange(len(haloids)))):

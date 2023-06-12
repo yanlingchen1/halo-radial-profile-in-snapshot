@@ -29,7 +29,7 @@ for mf in [13.0, 13.5]:
     print(f'{datetime.now()}: Program begins!')
     olddatapath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos'
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_1028halos'
-    savepath = f'{workpath}/xraylum_csvs_230610_{mf}_groups_radial_pkpc_cyl'
+    savepath = f'{workpath}/xraylum_csvs_230612_{mf}_groups_radial_pkpc_cyl'
     os.makedirs(savepath, exist_ok = True)
     df_halo = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
     haloids = df_halo['halo_ids']
@@ -42,7 +42,6 @@ for mf in [13.0, 13.5]:
     for q, xbins in enumerate([xbins_mean, xbins_med]):
         for prop in props_names:
             def cal_xraylum_excl(k):
-                print(f'{datetime.now()}:{k}')
                 haloid = haloids[k]
                 halo_cen = halo_centers[k]
                 # print(f'cal halo{haloid} ...')
@@ -58,7 +57,6 @@ for mf in [13.0, 13.5]:
                 return arr
            
             def cal_xraylum_incl(k):
-                print(k)
                 haloid = haloids[k]
                 halo_cen = halo_centers[k]
                 # print(f'cal halo{haloid} ...')
@@ -79,7 +77,7 @@ for mf in [13.0, 13.5]:
 
             output = np.zeros((len(xbins), len(haloids)))
             output1 = np.zeros((len(xbins), len(haloids)))
-            with concurrent.futures.ProcessPoolExecutor(16) as executor:
+            with concurrent.futures.ProcessPoolExecutor(64) as executor:
                 for k, result in enumerate(executor.map(cal_xraylum_excl, np.arange(len(haloids)))):
                     print(f'{datetime.now()}:{k}')
                     output[:,k] = result
