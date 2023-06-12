@@ -110,7 +110,7 @@ def cal_halo_summass(sid):
     lumdict = {}
     for line in linesbins.keys():
         lumdict[line], jointmsk, abun_to_solar = compute_lum(linesbins[line], data, 'lines', reds, msk, nH_densities)
-        return lumdict['o7f'], lumdict['o8'], lumdict['fe17'], jointmsk, data.gas.masses, data.gas.densities, nH_densities, data.gas.temperatures, abun_to_solar[:,0], abun_to_solar[:,1], abun_to_solar[:,2], abun_to_solar[:,3], abun_to_solar[:,4], abun_to_solar[:,5], abun_to_solar[:,6], abun_to_solar[:,7], abun_to_solar[:,10], data.gas.coordinates[:,0], data.gas.coordinates[:,1], data.gas.coordinates[:,2]
+    return lumdict['o7f'], lumdict['o8'], lumdict['fe17'], jointmsk, data.gas.masses, data.gas.densities, nH_densities, data.gas.temperatures, abun_to_solar[:,0], abun_to_solar[:,1], abun_to_solar[:,2], abun_to_solar[:,3], abun_to_solar[:,4], abun_to_solar[:,5], abun_to_solar[:,6], abun_to_solar[:,7], abun_to_solar[:,10], data.gas.coordinates[:,0], data.gas.coordinates[:,1], data.gas.coordinates[:,2]
 
 
 start = time.perf_counter()

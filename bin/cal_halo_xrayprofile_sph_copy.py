@@ -16,7 +16,7 @@ def msk_in_sph(coor, halo_center, r1, r2):
         d2 = 0.0
         for k in range(n):
             d2 += (coor[i,k] - halo_center[k])**2
-        where[i] = (d2 < r2**2) #& (d2 >= r1**2)
+        where[i] = (d2 < r2**2) & (d2 >= r1**2)
     
     return where
    
