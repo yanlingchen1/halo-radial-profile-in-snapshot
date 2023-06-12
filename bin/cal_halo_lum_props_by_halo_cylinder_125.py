@@ -23,6 +23,7 @@ from unyt import g, cm, mp
 import concurrent.futures
 import time
 import os
+import datetime
 
 m_nu = [0.02, 0.02, 0.02] * u.eV
 DESyr3 = FlatLambdaCDM(H0=68.1, Om0=0.3046, m_nu=m_nu, Ob0=0.0486, Tcmb0=2.725)
@@ -82,7 +83,7 @@ def compute_lum(interp_rest_range, data, table_type, z, where, nH_dens):
     )
     if lum is False:
         print('halo not bright in xray')
-        return None
+        return np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities))
     else:
         lum = lum.transpose()
         a_agn = data.gas.last_agnfeedback_scale_factors
@@ -109,8 +110,8 @@ def cal_halo_summass(sid):
     lumdict = {}
     for line in ['fe17', 'o7f', 'o8']:
         lumdict[line], jointmsk, abun_to_solar = compute_lum(linesbins[line], data, 'lines', reds, msk, nH_densities)
-        if lumdict[line] is None:
-            return None
+        if np.sum(lumdict[line]!=0) ==0 :
+            return  np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)),  np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)),  np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)),  np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)),  np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)),  np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities)),  np.zeros(len(data.gas.densities)), np.zeros(len(data.gas.densities))
         else:
             return lumdict['o7f'], lumdict['o8'], lumdict['fe17'], jointmsk, data.gas.masses, data.gas.densities, nH_densities, data.gas.temperatures, abun_to_solar[:,0], abun_to_solar[:,1], abun_to_solar[:,2], abun_to_solar[:,3], abun_to_solar[:,4], abun_to_solar[:,5], abun_to_solar[:,6], abun_to_solar[:,7], abun_to_solar[:,10], data.gas.coordinates[:,0], data.gas.coordinates[:,1], data.gas.coordinates[:,2]
 
@@ -133,8 +134,10 @@ with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N3600/HYDRO_FIDUCIAL/SOAP
 
 
 # define snapshot file
-filename = f'/cosma8/data/dp004/flamingo/Runs/L1000N3600/HYDRO_FIDUCIAL/snapshots/flamingo_00{int(78-reds/0.05)}/flamingo_00{int(78-reds/0.05)}.hdf5'
+
 workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot'
+# filename = f'{workpath}/test/test_dataset/flamingo_snapshot_noxraypart.hdf5'
+filename = f'/cosma8/data/dp004/flamingo/Runs/L1000N3600/HYDRO_FIDUCIAL/snapshots/flamingo_00{int(78-reds/0.05)}/flamingo_00{int(78-reds/0.05)}.hdf5'
 
 
 # preload table
@@ -169,7 +172,7 @@ for mf in mass_filter:
     output['o7f'] = np.zeros(len(halo_sel_ids))
     output['o8'] = np.zeros(len(halo_sel_ids))
 
-    savepath = f'{workpath}/results/xraysb_csvs_230607_{mf}_groups_1028halos_cyl'
+    savepath = f'{workpath}/results/xraysb_csvs_230611_{mf}_groups_1028halos_cyl'
     os.makedirs(savepath, exist_ok = True)
     # ######## for test ##########
     # halodoc = {}
@@ -179,17 +182,15 @@ for mf in mass_filter:
     # df1 = pd.DataFrame.from_dict(halodoc)
     # df1.to_csv(f'{savepath}/xray_linelum_snapshot{int(78-reds/0.05)}_halo{np.array(halo_sel_ids-1, dtype = int)[0]}_partlum.csv')  
     ######### formal ###########
-    with concurrent.futures.ProcessPoolExecutor(8) as executor:
+    with concurrent.futures.ProcessPoolExecutor(16) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass, np.array(halo_sel_ids-1, dtype = int))):
-            print(igit)
+            print(i)
             halodoc = {}
-            if result is None:
-                continue
-            else:
-                halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
-                output['o7f'][i], output['o8'][i], output['fe17'][i] = np.nansum(halodoc['o7f'][halodoc['jointmsk']]), np.nansum(halodoc['o8'][halodoc['jointmsk']]), np.nansum(halodoc['fe17'][halodoc['jointmsk']])
-                df1 = pd.DataFrame.from_dict(halodoc)
-                df1.to_csv(f'{savepath}/xray_linelum_snapshot{int(78-reds/0.05)}_halo{np.array(halo_sel_ids-1, dtype = int)[i]}_partlum.csv')  
+            halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
+            output['o7f'][i], output['o8'][i], output['fe17'][i] = np.nansum(halodoc['o7f'][halodoc['jointmsk']]), np.nansum(halodoc['o8'][halodoc['jointmsk']]), np.nansum(halodoc['fe17'][halodoc['jointmsk']])
+            df1 = pd.DataFrame.from_dict(halodoc)
+            df1.to_csv(f'{savepath}/xray_linelum_snapshot{int(78-reds/0.05)}_halo{np.array(halo_sel_ids-1, dtype = int)[i]}_partlum.csv')  
+            print(f'{datetime.now()} {halo_sel_ids[i]}.csv')
     df = pd.DataFrame.from_dict(output)
     df.to_csv(f'{savepath}/xray_linelum_snapshot{int(78-reds/0.05)}_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv')
     print(f'{savepath}/xray_linelum_snapshot{int(78-reds/0.05)}_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv has been saved! ')
