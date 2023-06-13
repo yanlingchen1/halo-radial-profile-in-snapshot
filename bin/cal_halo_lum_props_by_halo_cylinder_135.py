@@ -155,8 +155,8 @@ for mf in mass_filter:
     else:
         halo_sel_ids = soap_ids[where]
     
-    # not repeat calculate previous results
-    halo_sel_ids = halo_sel_ids[29:]
+    ## not repeat calculate previous results
+    #halo_sel_ids = halo_sel_ids[29:]
     print(len(halo_sel_ids))
     output = {}
     output['halo_ids'] = halo_sel_ids
