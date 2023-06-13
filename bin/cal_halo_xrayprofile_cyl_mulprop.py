@@ -45,116 +45,117 @@ for mf in [13.0, 13.5]:
     halo_r200cs = df_halo['r200c']
 
     
-    # calculate individual profile
-    # set timing
-    print(f'{datetime.now()}: Program begins to cal individual profiles!')
-    for q, xbins in enumerate([xbins_mean, xbins_med]):
-        for prop in props_names:
-            # define function in the loop. Or the parallel can run properly (since it can only input 1 parameter)
-            def cal_xraylum_excl(k):
-                haloid = haloids[k]
-                halo_cen = halo_centers[k]
-                # print(f'cal halo{haloid} ...')
-                bins = np.power(10, xbins) * 1 #Mpc
-                olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv')
-                arr  = np.zeros(len(bins))
-                for j in range(len(bins)-1):
-                    radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
-                    if prop != 'cts':
-                        arr[j] = np.nansum(olddf_part[prop][np.array(olddf_part['jointmsk']) & radmsk])
-                    else:
-                        arr[j] = np.nansum(np.array(olddf_part['jointmsk']) & radmsk)
-                return arr
-
-            def cal_xraylum_incl(k):
-                haloid = haloids[k]
-                halo_cen = halo_centers[k]
-                # print(f'cal halo{haloid} ...')
-                bins = np.power(10, xbins) * 1 #Mpc
-                arr = np.zeros(len(bins))
-                olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv')
-                for j in range(len(bins)-1):
-                    radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
-                    if prop != 'cts':
-                        arr[j] = np.nansum(olddf_part[prop][radmsk])
-                    else:
-                        arr[j] = np.nansum(olddf_part[radmsk])
-                return arr
-
-
-            # # testing
-            # print(cal_xraylum_excl(1))
-
-
-            output = np.zeros((len(xbins), len(haloids)))
-            output1 = np.zeros((len(xbins), len(haloids)))
-            with concurrent.futures.ProcessPoolExecutor(16) as executor:
-                for k, result in enumerate(executor.map(cal_xraylum_excl, np.arange(len(haloids)))):
-                    print(f'{datetime.now()}:{k}')
-                    output[:,k] = result
-                for k, result in enumerate(executor.map(cal_xraylum_incl, np.arange(len(haloids)))):
-                    output1[:,k] = result
-            
-            df = pd.DataFrame.from_dict(output)
-            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl_cyl.csv')
-            df = pd.DataFrame.from_dict(output1)
-            df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl_cyl.csv')
-            print(f'{datetime.now()}: csv has been saved!')
-            
-    # # calculate multiply profile
+    # # calculate individual profile
     # # set timing
-    # print(f'{datetime.now()}: Program begins to calculate mul profile!')
+    # print(f'{datetime.now()}: Program begins to cal individual profiles!')
     # for q, xbins in enumerate([xbins_mean, xbins_med]):
-    #     for prop in mul_props_names:
-    #         # multiply mass for mass-weighted profile
-    #         #initialize
-    #         output = {}
-    #         def cal_xraylum_mul(k):
-    #             # read data
+    #     for prop in props_names:
+    #         # define function in the loop. Or the parallel can run properly (since it can only input 1 parameter)
+    #         def cal_xraylum_excl(k):
     #             haloid = haloids[k]
     #             halo_cen = halo_centers[k]
     #             # print(f'cal halo{haloid} ...')
     #             bins = np.power(10, xbins) * 1 #Mpc
-    #             olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv') 
-    #             #initialize
+    #             olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv')
     #             arr  = np.zeros(len(bins))
+    #             for j in range(len(bins)-1):
+    #                 radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
+    #                 if prop != 'cts':
+    #                     arr[j] = np.nansum(olddf_part[prop][np.array(olddf_part['jointmsk']) & radmsk])
+    #                 else:
+    #                     arr[j] = np.nansum(np.array(olddf_part['jointmsk']) & radmsk)
+    #             return arr
 
-    #             for i in range(len(bins)-1):
-    #                 radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[i], bins[i+1], 6.25/2)
-    #                 for k, mask in enumerate([np.array(olddf_part['jointmsk']) & radmsk, radmsk]):
-    #                     mask_name = mask_names[k]
-    #                     for l, data in enumerate([olddf_part['part_masses'] * olddf_part[prop], 
-    #                         olddf_part['part_masses'] / olddf_part['part_dens'] * olddf_part[prop],
-    #                         olddf_part['o7f'] * olddf_part[prop],
-    #                         olddf_part['o8'] * olddf_part[prop],
-    #                         olddf_part['fe17'] * olddf_part[prop]]):
-    #                         data_name = mul_headers[l]
-    #                         arr[i] = np.nansum(data[mask])
-    #                         output[f'{data_name}_{mask_name}'] = arr
-    #             return output
+    #         def cal_xraylum_incl(k):
+    #             haloid = haloids[k]
+    #             halo_cen = halo_centers[k]
+    #             # print(f'cal halo{haloid} ...')
+    #             bins = np.power(10, xbins) * 1 #Mpc
+    #             arr = np.zeros(len(bins))
+    #             olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv')
+    #             for j in range(len(bins)-1):
+    #                 radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
+    #                 if prop != 'cts':
+    #                     arr[j] = np.nansum(olddf_part[prop][radmsk])
+    #                 else:
+    #                     arr[j] = np.nansum(olddf_part[radmsk])
+    #             return arr
+
+
+    #         # # testing
+    #         # print(cal_xraylum_excl(1))
+
+
+    #         output = np.zeros((len(xbins), len(haloids)))
+    #         output1 = np.zeros((len(xbins), len(haloids)))
+    #         with concurrent.futures.ProcessPoolExecutor(16) as executor:
+    #             for k, result in enumerate(executor.map(cal_xraylum_excl, np.arange(len(haloids)))):
+    #                 print(f'{datetime.now()}:{k}')
+    #                 output[:,k] = result
+    #             for k, result in enumerate(executor.map(cal_xraylum_incl, np.arange(len(haloids)))):
+    #                 output1[:,k] = result
+            
+    #         df = pd.DataFrame.from_dict(output)
+    #         df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_excl_cyl.csv')
+    #         df = pd.DataFrame.from_dict(output1)
+    #         df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_incl_cyl.csv')
+    #         print(f'{datetime.now()}: csv has been saved!')
+            
+    # calculate multiply profile
+    # set timing
+    print(f'{datetime.now()}: Program begins to calculate mul profile!')
+    for q, xbins in enumerate([xbins_mean, xbins_med]):
+        for prop in mul_props_names:
+            # multiply mass for mass-weighted profile
+            #initialize
+            output = {}
+            def cal_xraylum_mul(k):
+                # read data
+                haloid = haloids[k]
+                halo_cen = halo_centers[k]
+                # print(f'cal halo{haloid} ...')
+                bins = np.power(10, xbins) * 1 #Mpc
+                olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv') 
+                #initialize
+                arr  = np.zeros(len(bins))
+
+                for i in range(len(bins)-1):
+                    radmsk = msk_in_cyl(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[i], bins[i+1], 6.25/2)
+                    for k, mask in enumerate([np.array(olddf_part['jointmsk']) & radmsk, radmsk]):
+                        mask_name = mask_names[k]
+                        for l, data in enumerate([olddf_part['part_masses'] * olddf_part[prop], 
+                            olddf_part['part_masses'] / olddf_part['part_dens'] * olddf_part[prop],
+                            olddf_part['o7f'] * olddf_part[prop],
+                            olddf_part['o8'] * olddf_part[prop],
+                            olddf_part['fe17'] * olddf_part[prop]]):
+                            data_name = mul_headers[l]
+                            arr[i] = np.nansum(data[mask])
+                            output[f'{data_name}_{mask_name}'] = arr
+                return output
                 
               
 
-    #         # # testing
-    #         # res = cal_xraylum_mul(1)
-    #         # print(prop)
-    #         # print(res.keys())
-    #         # print(res.items())
+            # # testing
+            # res = cal_xraylum_mul(1)
+            # print(prop)
+            # print(res.keys())
+            # print(res.items())
+
+            # initialize the output
+            output = {}
+            for mask_name in mask_names:
+                for data_name in mul_headers:
+                    output[f'{data_name}_{mask_name}'] = np.zeros((len(xbins), len(haloids)))
+            with concurrent.futures.ProcessPoolExecutor(16) as executor:
+                for k, result in enumerate(executor.map(cal_xraylum_mul, np.arange(len(haloids)))):
+                    for mask_name in mask_names:
+                        for data_name in mul_headers:
+                            output[f'{data_name}_{mask_name}'][:,k] = result[f'{data_name}_{mask_name}']
 
             
-
-    #         # initialize the output
-    #         output = {}
-    #         for mask_name in mask_names:
-    #             for data_name in mul_headers:
-    #                 output[f'{data_name}_{mask_name}'] = np.zeros((len(xbins), len(haloids)))
-    #         with concurrent.futures.ProcessPoolExecutor(16) as executor:
-    #             for k, result in enumerate(executor.map(cal_xraylum_mul, np.arange(len(haloids)))):
-    #                 for mask_name in mask_names:
-    #                     for data_name in mul_headers:
-    #                         output[f'{data_name}_{mask_name}'][:,k] = result[f'{data_name}_{mask_name}']
-
-            
-    #         df = pd.DataFrame.from_dict(output)
-    #         df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_mul_cyl.csv')
-    #         print(f'{datetime.now()}: csv has been saved!')
+            # save 2d array to csv, don't save 3d dictionaries!
+            for mask_name in mask_names:
+                for data_name in mul_headers:
+                    df = pd.DataFrame.from_dict(output[f'{data_name}_{mask_name}'])  # Specify the index explicitly
+                    df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_{data_name}_{mask_name}_mul_cyl.csv')
+                    print(f'{datetime.now()}: csv has been saved!')

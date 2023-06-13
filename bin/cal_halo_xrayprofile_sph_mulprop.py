@@ -147,37 +147,41 @@ for mf in [13.0, 13.5]:
             # print(res.keys())
             # print(res.items())
 
-            ## further testing
+            # ## further testing
+            # output = {}
+            # for mask_name in mask_names:
+            #     for data_name in mul_headers:
+            #         output[f'{data_name}_{mask_name}'] = np.zeros((len(xbins), len(haloids)))
+
+            # with concurrent.futures.ProcessPoolExecutor(1) as executor:
+            #     for k, result in enumerate(executor.map(cal_xraylum_mul, np.arange(len(haloids))[0:2])):
+            #         for mask_name in mask_names:
+            #             for data_name in mul_headers:
+            #                 output[f'{data_name}_{mask_name}'][:, k] = result[f'{data_name}_{mask_name}']
+            
+            # # save 2d array to csv, don't save 3d dictionaries!
+            # for mask_name in mask_names:
+            #     for data_name in mul_headers:
+            #         df = pd.DataFrame.from_dict(output[f'{data_name}_{mask_name}'])  # Specify the index explicitly
+            #         df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_{data_name}_{mask_name}_mul_sph.csv')
+            #         print(f'{datetime.now()}: csv has been saved!')
+
+
+            # initialize the output
             output = {}
             for mask_name in mask_names:
                 for data_name in mul_headers:
                     output[f'{data_name}_{mask_name}'] = np.zeros((len(xbins), len(haloids)))
-
-            with concurrent.futures.ProcessPoolExecutor(1) as executor:
-                for k, result in enumerate(executor.map(cal_xraylum_mul, np.arange(len(haloids))[0:2])):
+            with concurrent.futures.ProcessPoolExecutor(16) as executor:
+                for k, result in enumerate(executor.map(cal_xraylum_mul, np.arange(len(haloids)))):
                     for mask_name in mask_names:
                         for data_name in mul_headers:
-                            output[f'{data_name}_{mask_name}'][:, k] = result[f'{data_name}_{mask_name}']
+                            output[f'{data_name}_{mask_name}'][:,k] = result[f'{data_name}_{mask_name}']
+
             
+            # save 2d array to csv, don't save 3d dictionaries!
             for mask_name in mask_names:
                 for data_name in mul_headers:
                     df = pd.DataFrame.from_dict(output[f'{data_name}_{mask_name}'])  # Specify the index explicitly
                     df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_{data_name}_{mask_name}_mul_sph.csv')
                     print(f'{datetime.now()}: csv has been saved!')
-
-
-            # # initialize the output
-            # output = {}
-            # for mask_name in mask_names:
-            #     for data_name in mul_headers:
-            #         output[f'{data_name}_{mask_name}'] = np.zeros((len(xbins), len(haloids)))
-            # with concurrent.futures.ProcessPoolExecutor(16) as executor:
-            #     for k, result in enumerate(executor.map(cal_xraylum_mul, np.arange(len(haloids)))):
-            #         for mask_name in mask_names:
-            #             for data_name in mul_headers:
-            #                 output[f'{data_name}_{mask_name}'][:,k] = result[f'{data_name}_{mask_name}']
-
-            
-            # df = pd.DataFrame.from_dict(output)
-            # df.to_csv(f'{savepath}/{prop}_{xbins_names[q]}_mul_sph.csv')
-            # print(f'{datetime.now()}: csv has been saved!')
