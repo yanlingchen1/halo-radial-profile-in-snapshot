@@ -4,6 +4,8 @@ import numba as nb
 import os
 import concurrent.futures
 from datetime import datetime
+
+# define functions
 @nb.jit(nopython=True)
 def msk_in_cylinder(coor, halo_center, r1, r2, z):
     n = 2
@@ -14,22 +16,33 @@ def msk_in_cylinder(coor, halo_center, r1, r2, z):
             d2 += (coor[i,j] - halo_center[j])**2
         where[i] = (d2 < r2**2) & (d2 >= r1**2) & (coor[i,2] <= (halo_center[2]+z)) & (coor[i,2] >= (halo_center[2]-z))
     return where
-   
+def mul_prop(prop, mul_prop):
+    return prop * mul_prop
+    
+# define input parameters
+xbins_mean = np.arange(-2,3.25,0.25)
+xbins_med = np.arange(-2,3.1,0.1)
+# props_names = ['part_masses','nH_dens','part_temperatures', 'fe17', 'o7f', 'o8']
+props_names = ['part_masses','nH_dens','part_temperatures']
+xbins_names = ['010dex', '025dex']
+mul_modes = ['mass', 'vol', 'linelum']
 
 for mf in [13.0, 13.5]:
+    # set timing
     print(f'{datetime.now()}: Program begins!')
+
+    # define paths
     olddatapath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos'
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_1028halos'
     savepath = f'{workpath}/xraylum_csvs_230608_{mf}_groups_radial_pkpc_cyl'
     os.makedirs(savepath, exist_ok = True)
+
+    # read data
     df_halo = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
     haloids = df_halo['halo_ids']
     halo_centers = np.array([df_halo['x_gasmass_center'], df_halo['y_gasmass_center'], df_halo['z_gasmass_center']]).T
     halo_r200cs = df_halo['r200c']
-    xbins_mean = np.arange(-2,3.25,0.25)
-    xbins_med = np.arange(-2,3.1,0.1)
-    props_names = ['part_masses','part_dens','part_temperatures', 'cts']
-    xbins_names = ['010dex', '025dex']
+
     for q, xbins in enumerate([xbins_mean, xbins_med]):
         def cal_xraylum_excl(k):
             haloid = haloids[k]
@@ -40,6 +53,8 @@ for mf in [13.0, 13.5]:
             newdf_part = pd.read_csv(f'{workpath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum.csv')
             prop_arr  = np.zeros(len(bins))
             cts_arr = np.zeros(len(bins))
+            for mul_mode in mul_modes:
+                
             for j in range(len(bins)-1):
                 radmsk = msk_in_cylinder(np.array([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']]).T, halo_cen, bins[j], bins[j+1], 6.25/2)
                 if prop != 'cts':
