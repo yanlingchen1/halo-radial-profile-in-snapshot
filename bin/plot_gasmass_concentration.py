@@ -115,7 +115,7 @@ for mf in massfilter:
                 plt.close()
         # plot other properties in radii bins
         else:
-            for shape in ['sph']:
+            for shape in ['sph', 'cyl']:
                 fig, ax = plt.subplots(figsize = (8,8))
                 for k, type in enumerate(['excl', 'incl']):
                     lstyle = lstyles[k]
