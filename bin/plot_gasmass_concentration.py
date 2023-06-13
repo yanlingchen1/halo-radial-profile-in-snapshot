@@ -7,13 +7,13 @@ from glob import glob
 
 # define parameters
 massfilter = [13.0, 13.5]
-props = ['part_masses', 'part_temperatures', 'nH_dens', 'cts', 'abun_oxygen', 'abun_iron', 'fe17', 'o7f', 'o8']
+props = ['part_masses', 'part_temperatures', 'part_dens', 'cts']
 reds = 0
 
 # define plotting parameters
 import seaborn as sns
 cb = sns.color_palette("colorblind").as_hex()
-
+lstyles = ['solid', 'dotted']
 # Define the radius bins
 xbins_mean = 10**np.arange(-2,3.25,0.25)  # Mpc for 0.25 dex
 xbins_med = 10**np.arange(-2,3.1,0.1)  # Mpc for 0.1 dex
@@ -39,23 +39,28 @@ for mf in massfilter:
             soap_ids = np.array(catalogue_soap["VR/ID"][()])
             m200c_sp = catalogue_soap["SO/200_crit/TotalMass"][()]
             r200c_sp = catalogue_soap["SO/200_crit/SORadius"][()]
+            print(catalogue_soap["SO/200_crit"].keys())
         m200c = m200c_sp[np.isin(soap_ids, halo_ids)]
         r200c = r200c_sp[np.isin(soap_ids, halo_ids)]
         # Plot part_mass in r versus M200c
         if prop == 'part_masses':
             fig, ax = plt.subplots()
-            for type in ['excl', 'incl']:
+            for k, type in enumerate(['excl', 'incl']):
+                lstyle = lstyles[k]
                 for i, binning in enumerate(xbins.keys()):
-                    for shape in ['cyl', 'sph']:
+                    for shape in ['sph']:
                         prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
-                        prof = np.array(prof)[:, :1022]
+                        prof = np.array(prof)[:, :len(m200c)]
                         sum_prof = np.cumsum(prof, axis=0)
                         for k in range(len(sum_prof)):
-                            plt.plot(xbins[binning]/r200c[k], sum_prof[:,k]/m200c[k]*1e10, c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2)
+                            if k==0:
+                                plt.plot(xbins[binning][0]/r200c[k], sum_prof[:,k]/m200c[k]*1e10, c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
+                            else:
+                                plt.plot(xbins[binning][0]/r200c[k], sum_prof[:,k]/m200c[k]*1e10, c = cb[i], linestyle = lstyle)
                         if binning == '010dex':
-                            plt.plot(xbins[binning]/r200c[k], np.nanmedian(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}')
+                            plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 4, alpha = 0.6)
                         elif binning == '025dex':
-                            plt.plot(xbins[binning]/r200c[k], np.nanmean(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}')
+                            plt.plot(xbins[binning][0]/r200c[k], np.nanmean(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 3, alpha = 0.6)
                         else: 
                             raise ValueError('Binning type does not exist!')
             plt.axvline(1)
@@ -66,29 +71,35 @@ for mf in massfilter:
             plt.xscale('log')
             plt.yscale('log')
             plt.title(f'gas mass fraction v.s. r')
-            plt.savefig(f'{prop}_{mf}_gas-mass-frac_vs_r.png')
+            plt.legend()
+            plt.savefig(f'{savepath}/{prop}_{mf}_gas-mass-frac_vs_r.png')
             print('plot has been created!')
             plt.close()
         # plot other properties in radii bins
         else:
             fig, ax = plt.subplots()
-            for type in ['excl', 'incl']:
+            for k, type in enumerate(['excl', 'incl']):
+                lstyle = lstyles[k]
                 for i, binning in enumerate(xbins.keys()):
-                    for shape in ['cyl', 'sph']:
+                    for shape in ['sph']:
                         prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
-                        prof = np.array(prof)[:, :1022]
+                        prof = np.array(prof)[:, :len(m200c)]
                         for k in range(len(sum_prof)):
-                            plt.plot(xbins[binning]/r200c[k], sum_prof[:,k], c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2)
+                            if k == 0:
+                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
+                            else:
+                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], alpha = 0.2, linestyle = lstyle)
                         if binning == '010dex':
-                            plt.plot(xbins[binning]/r200c[k], np.nanmedian(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}')
+                            plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 4, linestyle = lstyle, alpha = 0.6)
                         elif binning == '025dex':
-                            plt.plot(xbins[binning]/r200c[k], np.nanmean(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}')
+                            plt.plot(xbins[binning][0]/r200c[k], np.nanmean(prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 3, linestyle = lstyle, alpha = 0.6)
                         else: 
                             raise ValueError('Binning type does not exist!')
             plt.xlabel('r / $r_{200c}$')
-            plt.ylabel('cts')
+            plt.ylabel(f'{prop}')
             plt.yscale('log')
             plt.xscale('log')
-            plt.title(f'cts in every radial bin')
+            plt.title(f'{prop} in every radial bin')
+            plt.legend()
             plt.savefig(f'{savepath}/{prop}_{mf}_cts_vs_r.png')
             plt.close()
