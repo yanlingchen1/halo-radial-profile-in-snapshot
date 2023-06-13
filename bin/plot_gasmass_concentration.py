@@ -39,17 +39,22 @@ for mf in massfilter:
             soap_ids = np.array(catalogue_soap["VR/ID"][()])
             m200c_sp = catalogue_soap["SO/200_crit/TotalMass"][()]
             r200c_sp = catalogue_soap["SO/200_crit/SORadius"][()]
-            print(catalogue_soap["SO/200_crit"].keys())
+
         m200c = m200c_sp[np.isin(soap_ids, halo_ids)]
         r200c = r200c_sp[np.isin(soap_ids, halo_ids)]
+
+        
         # Plot part_mass in r versus M200c
         if prop == 'part_masses':
-            fig, ax = plt.subplots()
+            fig, ax = plt.subplots(figsize = (8,8))
             for k, type in enumerate(['excl', 'incl']):
                 lstyle = lstyles[k]
                 for i, binning in enumerate(xbins.keys()):
                     for shape in ['sph']:
                         prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
+                        # # exclude the radii bin whose cts < 50
+                        # radii_cts = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
+                        # prof[radii_cts<50] = np.nan
                         prof = np.array(prof)[:, :len(m200c)]
                         sum_prof = np.cumsum(prof, axis=0)
                         for k in range(len(sum_prof)):
@@ -77,22 +82,25 @@ for mf in massfilter:
             plt.close()
         # plot other properties in radii bins
         else:
-            fig, ax = plt.subplots()
+            fig, ax = plt.subplots(figsize = (8,8))
             for k, type in enumerate(['excl', 'incl']):
                 lstyle = lstyles[k]
                 for i, binning in enumerate(xbins.keys()):
                     for shape in ['sph']:
                         prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
+                        # exclude the radii bin whose cts < 50
+                        radii_cts = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
+                        prof[radii_cts<50] = np.nan
                         prof = np.array(prof)[:, :len(m200c)]
-                        for k in range(len(sum_prof)):
+                        for k in range(len(prof)):
                             if k == 0:
                                 plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
                             else:
                                 plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], alpha = 0.2, linestyle = lstyle)
                         if binning == '010dex':
-                            plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 4, linestyle = lstyle, alpha = 0.6)
+                            plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 4, linestyle = lstyle, alpha = 0.6)
                         elif binning == '025dex':
-                            plt.plot(xbins[binning][0]/r200c[k], np.nanmean(prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 3, linestyle = lstyle, alpha = 0.6)
+                            plt.plot(xbins[binning][0]/r200c[k], np.nanmean(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 3, linestyle = lstyle, alpha = 0.6)
                         else: 
                             raise ValueError('Binning type does not exist!')
             plt.xlabel('r / $r_{200c}$')
