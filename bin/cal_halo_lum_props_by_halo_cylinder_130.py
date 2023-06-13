@@ -145,7 +145,7 @@ print('table_loaded')
 
 np.random.seed(0)
 mass_filter = np.array([13.0])
-halonum = 1028
+halonum = 128
 for mf in mass_filter:
     where = (m200c_sp < np.power(10,mf+0.5)) & (m200c_sp >= np.power(10,mf)) & (gasmass_center[:,0] > 50) & (gasmass_center[:,0] < 950) & (gasmass_center[:,1] > 50) & (gasmass_center[:,1] < 950) & (gasmass_center[:,2] > 50) & (gasmass_center[:,2] < 950)
     print(np.sum(where))
@@ -180,7 +180,7 @@ for mf in mass_filter:
     # df1 = pd.DataFrame.from_dict(halodoc)
     # df1.to_csv(f'{savepath}/xray_linelum_snapshot{int(78-reds/0.05)}_halo{np.array(halo_sel_ids-1, dtype = int)[0]}_partlum.csv')  
     ######### formal ###########
-    with concurrent.futures.ProcessPoolExecutor(64) as executor:
+    with concurrent.futures.ProcessPoolExecutor(16) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass, np.array(halo_sel_ids-1, dtype = int))):
             print(i)
             halodoc = {}
