@@ -18,7 +18,7 @@ import os
 # define parameters
 reds = 0
 halonum = 7 # first use 50 halos to test
-for mf in [14.5]:
+for mf in [12.5]:
 
     # define paths
     resultpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results'
