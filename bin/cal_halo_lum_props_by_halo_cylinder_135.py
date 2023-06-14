@@ -23,7 +23,7 @@ from unyt import g, cm, mp
 import concurrent.futures
 import time
 import os
-import datetime
+from datetime import datetime
 
 m_nu = [0.02, 0.02, 0.02] * u.eV
 DESyr3 = FlatLambdaCDM(H0=68.1, Om0=0.3046, m_nu=m_nu, Ob0=0.0486, Tcmb0=2.725)
