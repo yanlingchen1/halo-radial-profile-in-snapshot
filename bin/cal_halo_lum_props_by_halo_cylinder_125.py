@@ -6,7 +6,7 @@
 abundance to solar: wherea calcium and sulfur are the same as the silicon
 ['hydrogen', 'helium', 'carbon', 'nitrogen', 'oxygen', 'neon', 'magnesium', 'silicon', 'calcium', 'sulfur', 'iron']
 '''
-
+### for ids: 1. for The single halo: id in filename +1 = soap['VR/id'] 2. for the ids in sumfile: id = soap['VR/id']
 ### Notice, L1000N3600 starts at 78-reds/0.05, reds = 0, 0.1, 0.2, ...
 ### While, L1000N1800 has complete cat for every redshift intervaled by 0.05
 import numba as nb
@@ -166,6 +166,7 @@ for mf in mass_filter:
     else:
         halo_sel_ids = soap_ids[where]
     
+    
     ## not repeat calculate previous results
     # halo_sel_ids = halo_sel_ids[29:]
     output = {}
@@ -180,7 +181,7 @@ for mf in mass_filter:
     output['o7f'] = np.zeros(len(halo_sel_ids))
     output['o8'] = np.zeros(len(halo_sel_ids))
 
-    savepath = f'{workpath}/results/xraysb_csvs_230612_{mf}_groups_1028halos_cyl'
+    savepath = f'{workpath}/results/xraysb_csvs_230615_{mf}_groups_1028halos_cyl'
     os.makedirs(savepath, exist_ok = True)
     # ######## for test ##########
     # halodoc = {}
@@ -219,7 +220,7 @@ for mf in mass_filter:
 
     ######### formal ###########
     with concurrent.futures.ProcessPoolExecutor(16) as executor:
-        for i, result in enumerate(executor.map(cal_halo_summass, np.array(halo_sel_ids[0:2]-1, dtype = int))):
+        for i, result in enumerate(executor.map(cal_halo_summass, np.array(halo_sel_ids-1, dtype = int))):
             halodoc = {}
             halodoc['o7f'], halodoc['o8'], halodoc['fe17'], halodoc['jointmsk'], halodoc['part_masses'], halodoc['part_dens'], halodoc['nH_dens'], halodoc['part_temperatures'], halodoc['abun_hydrogen'], halodoc['abun_helium'], halodoc['abun_carbon'], halodoc['abun_nitrogen'], halodoc['abun_oxygen'], halodoc['abun_neon'], halodoc['abun_magnesium'], halodoc['abun_silicon'], halodoc['abun_iron'],halodoc['part_xcoords'], halodoc['part_ycoords'], halodoc['part_zcoords'] = result
             output['o7f'][i], output['o8'][i], output['fe17'][i] = np.nansum(halodoc['o7f'][halodoc['jointmsk']]), np.nansum(halodoc['o8'][halodoc['jointmsk']]), np.nansum(halodoc['fe17'][halodoc['jointmsk']])
