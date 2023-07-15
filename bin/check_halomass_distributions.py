@@ -21,7 +21,7 @@ for mf in [13.0, 13.5]:
     # define paths
     resultpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_wrong_wholeboxz_sb'
     datapath = f'{resultpath}/xraysb_csvs_230504_{mf}_groups_1028halos'
-    savepath = f'../fig/halomass_distribution'
+    savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/halomass_distribution'
     os.makedirs(savepath, exist_ok = True)
     # read data
     sumfilename = glob(f'{datapath}/*btw*')[0]
@@ -65,7 +65,6 @@ for mf in [13.0, 13.5]:
     plt.legend()
     plt.savefig(f'{savepath}/flamingo_medres_1Gpc_totmass_{mf}.png')
     plt.close()
-    plt.scatter(m200c_sim)
     # # plot soap filter test
     # filter = (m200c_sp_tm < np.power(10, mf))
     # soap_ids_fil = soap_ids[filter]

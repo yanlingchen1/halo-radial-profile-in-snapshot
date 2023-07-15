@@ -106,7 +106,7 @@ def cal_halo_summass(sid):
     data = sw.load(filename, mask=mask)
     msk = msk_in_cylinder(np.array(data.gas.coordinates), (gasmass_center[:,0][sid],gasmass_center[:,1][sid],gasmass_center[:,2][sid]), 3.5, 6.25)
     nH_densities = interpdens2nH(data.gas.densities, data.gas.smoothed_element_mass_fractions.hydrogen, np.zeros(data.gas.densities.shape))
-    linesbins = {'fe17':[0.724, 0.726],'o7f':[0.574,0.576],'o8':[0.653,0.656]}
+    linesbins = {'fe17':[0.724, 0.726],'o7r':[0.574,0.576],'o8':[0.653,0.656]}
     lumdict = {}
     for line in linesbins.keys():
         lumdict[line], jointmsk, abun_to_solar = compute_lum(linesbins[line], data, 'lines', reds, msk, nH_densities)

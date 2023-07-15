@@ -5,9 +5,35 @@ import pandas as pd
 import h5py
 from glob import glob
 
+# define functions
+def basic_figure_style():
+    SMALL_SIZE = 6*2                                    
+    MEDIUM_SIZE = 8*2
+    BIGGER_SIZE = 10*2
+
+    plt.rc('font', size=MEDIUM_SIZE, family='serif')          # controls default text sizes
+    plt.rc('axes', titlesize=MEDIUM_SIZE)                     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)                    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE, direction='out')    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE, direction='out')    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)                    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)                  # fontsize of the figure title
+    plt.rc('lines', linewidth=2) 
+    plt.rc('axes', grid=True) #
+    plt.rc('grid', alpha=0.7) #
+    plt.rc('xtick', top=True)
+    plt.rc('ytick', right=True)
+    plt.rc('axes.formatter', use_mathtext=True, min_exponent=4, useoffset=False)
+
+
+    # plt.rc('figure', figsize='8, 6')                         # size of the figure, used to be '4, 3' in inches
+    ######################################################
+basic_figure_style()
+cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4', '#949494', '#ece133', '#56b4e9']
+
 # define parameters
-massfilter = [13.0, 13.5]
-props = ['part_masses', 'part_temperatures', 'part_dens', 'cts']
+massfilter = [13.5]
+props = ['o7f', 'o8', 'fe17']#['part_masses', 'part_temperatures', 'part_dens', 'cts', ]
 reds = 0
 weighting = ['none', 'mass', 'volume']
 # define plotting parameters
@@ -27,7 +53,7 @@ for mf in massfilter:
         old_data_path = f'{result_path}/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos'
         soap_file = glob(f'{old_data_path}/*btw*')[0]
         prof_path = f'{workpath}/xraylum_csvs_230612_{mf}_groups_radial_pkpc_cyl'
-        savepath = f'{prof_path}/png'
+        savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230616/ind_profile'
         os.makedirs(savepath, exist_ok=True)
         # read M200 from soap
         halo_ids = pd.read_csv(soap_file)['halo_ids']
@@ -47,28 +73,27 @@ for mf in massfilter:
         # Plot part_mass in r versus M200c
         if prop == 'part_masses':
             for shape in ['sph', 'cyl']:
-                fig, ax = plt.subplots(figsize = (8,8))
                 for k, type in enumerate(['excl', 'incl']):
-                    lstyle = lstyles[k]
+                    fig, ax = plt.subplots(figsize = (8,8))
                     for i, binning in enumerate(xbins.keys()):
-                        
-                            prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
-                            # # exclude the radii bin whose cts < 50
-                            # radii_cts = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
-                            # prof[radii_cts<50] = np.nan
-                            prof = np.array(prof)[:, :len(m200c)]
-                            sum_prof = np.cumsum(prof, axis=0)
-                            for k in range(len(sum_prof)):
-                                if k==0:
-                                    plt.plot(xbins[binning][0]/r200c[k], sum_prof[:,k]/m200c[k]*1e10, c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
-                                else:
-                                    plt.plot(xbins[binning][0]/r200c[k], sum_prof[:,k]/m200c[k]*1e10, c = cb[i], linestyle = lstyle)
-                            if binning == '010dex':
-                                plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 4, alpha = 0.6)
-                            elif binning == '025dex':
-                                plt.plot(xbins[binning][0]/r200c[k], np.nanmean(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 3, alpha = 0.6)
-                            else: 
-                                raise ValueError('Binning type does not exist!')
+                        lstyle = lstyles[i]
+                        prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
+                        # # exclude the radii bin whose cts < 50
+                        # radii_cts = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
+                        # prof[radii_cts<50] = np.nan
+                        prof = np.array(prof)[:, :len(m200c)]
+                        sum_prof = np.cumsum(prof, axis=0)
+                        for k in range(len(sum_prof)):
+                            if k==0:
+                                plt.plot(xbins[binning][0]/r200c[k], sum_prof[:,k]/m200c[k]*1e10, c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
+                            else:
+                                plt.plot(xbins[binning][0]/r200c[k], sum_prof[:,k]/m200c[k]*1e10, c = cb[i], linestyle = lstyle)
+                        if binning == '010dex':
+                            plt.plot(xbins[binning][0]/np.median(r200c), np.nanmedian(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 2, alpha = 0.8)
+                        elif binning == '025dex':
+                            plt.plot(xbins[binning][0]/np.median(r200c), np.nanmean(sum_prof/m200c*1e10, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 2, alpha = 0.8)
+                        else: 
+                            raise ValueError('Binning type does not exist!')
                 plt.axvline(1)
                 plt.axhline(1)
                 plt.axhline(0.1)
@@ -78,67 +103,33 @@ for mf in massfilter:
                 plt.yscale('log')
                 plt.title(f'gas mass fraction v.s. r')
                 plt.legend()
-                plt.savefig(f'{savepath}/{prop}_{mf}_{shape}_gas-mass-frac_vs_r.png')
+                plt.savefig(f'{savepath}/{prop}_{mf}_{shape}_{type}_gas-mass-frac_vs_r.png')
                 print('plot has been created!')
                 plt.close()
         # plot cts in radii bins
         elif prop == 'cts':
             for shape in ['sph', 'cyl']:
-                fig, ax = plt.subplots(figsize = (8,8))
+                
                 for k, type in enumerate(['excl', 'incl']):
-                    lstyle = lstyles[k]
-                    for i, binning in enumerate(xbins.keys()):
-                            prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
-                            # exclude the radii bin whose cts < 50
-                            radii_cts = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
-                            prof[radii_cts<50] = np.nan
-                            prof = np.array(prof)[:, :len(m200c)]
-
-                            for k in range(len(prof)):
-                                if k == 0:
-                                    plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
-                                else:
-                                    plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], alpha = 0.2, linestyle = lstyle)
-                            if binning == '010dex':
-                                plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 4, linestyle = lstyle, alpha = 0.6)
-                            elif binning == '025dex':
-                                plt.plot(xbins[binning][0]/r200c[k], np.nanmean(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 3, linestyle = lstyle, alpha = 0.6)
-                            else: 
-                                raise ValueError('Binning type does not exist!')
-                plt.xlabel('r / $r_{200c}$')
-                plt.ylabel(f'{prop}')
-                plt.yscale('log')
-                plt.xscale('log')
-                plt.title(f'{prop} in every radial bin')
-                plt.legend()
-                plt.savefig(f'{savepath}/{prop}_{mf}_{shape}_cts_vs_r.png')
-                plt.close()
-        # plot other properties in radii bins
-        else:
-            for shape in ['sph', 'cyl']:
-                fig, ax = plt.subplots(figsize = (8,8))
-                for k, type in enumerate(['excl', 'incl']):
-                    lstyle = lstyles[k]
-                    for i, binning in enumerate(xbins.keys()):
+                    fig, ax = plt.subplots(figsize = (8,8))
                     
+                    for i, binning in enumerate(xbins.keys()):
+                        lstyle = lstyles[i]
                         prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
-                        prof_mass = pd.read_csv(f'{prof_path}/part_masses_{binning}_{type}_{shape}.csv')
-                        
                         # exclude the radii bin whose cts < 50
                         radii_cts = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
                         prof[radii_cts<50] = np.nan
                         prof = np.array(prof)[:, :len(m200c)]
-                        prof_mass[radii_cts<50] = np.nan
-                        prof_mass = np.array(prof_mass)[:, :len(m200c)]
+
                         for k in range(len(prof)):
                             if k == 0:
-                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k]*prof_mass[:,k]/prof_mass[:,k], c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
+                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
                             else:
-                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k]*prof_mass[:,k]/prof_mass[:,k], c = cb[i], alpha = 0.2, linestyle = lstyle)
+                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], alpha = 0.2, linestyle = lstyle)
                         if binning == '010dex':
-                            plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(prof*prof_mass/prof_mass, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 4, linestyle = lstyle, alpha = 0.6)
+                            plt.plot(xbins[binning][0]/np.median(r200c[k]), np.nanmedian(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 4, linestyle = lstyle, alpha = 0.6)
                         elif binning == '025dex':
-                            plt.plot(xbins[binning][0]/r200c[k], np.nanmean(prof*prof_mass/prof_mass, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 3, linestyle = lstyle, alpha = 0.6)
+                            plt.plot(xbins[binning][0]/np.median(r200c[k]), np.nanmean(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 3, linestyle = lstyle, alpha = 0.6)
                         else: 
                             raise ValueError('Binning type does not exist!')
                 plt.xlabel('r / $r_{200c}$')
@@ -147,5 +138,40 @@ for mf in massfilter:
                 plt.xscale('log')
                 plt.title(f'{prop} in every radial bin')
                 plt.legend()
-                plt.savefig(f'{savepath}/{prop}_{mf}_{shape}_cts_vs_r.png')
+                plt.savefig(f'{savepath}/{prop}_{mf}_{shape}_{type}_cts_vs_r.png')
                 plt.close()
+        # plot other properties in radii bins
+        else:
+            for shape in ['sph', 'cyl']:
+                fig, ax = plt.subplots(figsize = (8,8))
+                for k, type in enumerate(['excl', 'incl']):
+                    for i, binning in enumerate(xbins.keys()):
+                        lstyle = lstyles[i]
+                        prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_{type}_{shape}.csv')
+                        
+                        # exclude the radii bin whose cts < 50
+                        radii_cts = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
+                        prof[radii_cts<50] = np.nan
+                        prof = np.array(prof)[:, :len(m200c)]
+
+                        for k in range(len(prof)):
+                            if k == 0:
+                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], label = f'{shape}_{binning}_{type}', alpha = 0.2, linestyle = lstyle)
+                            else:
+                                plt.plot(xbins[binning][0]/r200c[k], prof[:,k], c = cb[i], alpha = 0.2, linestyle = lstyle)
+                        if binning == '010dex':
+                            plt.plot(xbins[binning][0]/np.median(r200c), np.nanmedian(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 2, linestyle = lstyle, alpha = 0.7)
+                        elif binning == '025dex':
+                            plt.plot(xbins[binning][0]/np.median(r200c), np.nanmean(prof, axis=1), c = cb[i], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linewidth = 2, linestyle = lstyle, alpha = 0.7)
+                        else: 
+                            raise ValueError('Binning type does not exist!')
+                    plt.xlabel('r / $r_{200c}$')
+                    plt.ylabel(f'{prop}')
+                    plt.yscale('log')
+                    plt.xscale('log')
+                    plt.ylim(1e30, 1e35)
+                    plt.xlim(0.05, 8)
+                    plt.title(f'{prop} in every radial bin')
+                    plt.legend()
+                    plt.savefig(f'{savepath}/{prop}_{mf}_{shape}_{type}.png')
+                    plt.close()

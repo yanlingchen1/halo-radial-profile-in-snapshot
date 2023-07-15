@@ -25,7 +25,7 @@ def msk_in_sph_new(coor, halo_center, r1, r2):
     where = (dists< r2) & (dists>=r1)
     return where
 
-for mf in [13.0, 13.5]:
+for mf in [14.0, 14.5]:
     print(f'{datetime.now()}: Program begins!')
     olddatapath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos'
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_1028halos'
@@ -37,7 +37,7 @@ for mf in [13.0, 13.5]:
     halo_r200cs = df_halo['r200c']
     xbins_mean = np.arange(-2,3.25,0.25)
     xbins_med = np.arange(-2,3.1,0.1)
-    props_names = ['part_masses','part_dens','part_temperatures', 'cts']
+    props_names = ['part_masses','part_dens','part_temperatures', 'cts', 'o7f', 'o8', 'fe17']
     xbins_names = ['025dex', '010dex']
     for q, xbins in enumerate([xbins_mean, xbins_med]):
         for prop in props_names:

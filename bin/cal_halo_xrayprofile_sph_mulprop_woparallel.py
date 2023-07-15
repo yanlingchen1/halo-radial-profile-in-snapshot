@@ -29,14 +29,13 @@ def msk_in_sph_new(coor, halo_center, r1, r2):
 # input parameters
 xbins_mean = np.arange(-2,3.25,0.25)
 xbins_med = np.arange(-2,3.1,0.1)
-mul_props_names = ['nH_dens','part_temperatures', 'abun_hydrogen', 'abun_oxygen', 'abun_iron']
-props_names = ['nH_dens', 'abun_hydrogen', 'abun_oxygen', 'abun_iron', 'o7f', 'o8', 'fe17']
+mul_props_names = ['abun_oxygen', 'abun_iron'] # , 'abun_hydrogen', 'abun_oxygen', 'abun_iron'
 xbins_names = ['025dex', '010dex']
 mul_headers = ['mul_mass', 'mul_vol', 'mul_o7f', 'mul_o8', 'mul_fe17']
 mask_names = ['excl', 'incl']
 
 # # begin calculate profiles
-for mf in [13.0, 13.5]:#, 13.5]:
+for mf in [ 14.0, 14.5]:#, 13.5]:
     # set timing
     print(f'{datetime.now()}: Program begins!')
 
@@ -55,7 +54,7 @@ for mf in [13.0, 13.5]:#, 13.5]:
     # calculate multiply profile
     # set timing
     print(f'{datetime.now()}: Program begins to calculate mul profile!')
-    for q, xbins in enumerate([xbins_mean, xbins_med]):
+    for q, xbins in enumerate([xbins_mean]): # , xbins_med
         for prop in mul_props_names:
             # multiply mass for mass-weighted profile
             # initialize output

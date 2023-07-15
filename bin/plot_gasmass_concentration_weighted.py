@@ -32,19 +32,18 @@ def basic_figure_style():
     plt.rc('xtick', top=True)
     plt.rc('ytick', right=True)
     plt.rc('axes.formatter', use_mathtext=True, min_exponent=4, useoffset=False)
-
-
     # plt.rc('figure', figsize='8, 6')                         # size of the figure, used to be '4, 3' in inches
     ######################################################
+    
 basic_figure_style()
 cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4', '#949494', '#ece133', '#56b4e9']
 
 # define parameters
-massfilter = [13.0, 13.5]
+massfilter = [14.0, 14.5]
 reds = 0
-props = ['part_temperatures', 'nH_dens', 'abun_hydrogen', 'abun_iron', 'abun_oxygen']
-units = ['K', '$\\rm cm^{-3}$', '$Z_{\odot}$']
-weightings = ['mass', 'o7f', 'o8', 'fe17'] # 'vol', 
+props = ['part_temperatures', 'nH_dens', 'abun_iron', 'abun_oxygen']
+units = ['K', '$\\rm cm^{-3}$', '$Z_{\odot}$', '$Z_{\odot}$']
+weightings = ['mass', 'o7f', 'o8', 'fe17', 'vol']
 
 # define plotting parameters
 import seaborn as sns
@@ -54,12 +53,12 @@ lstyles = ['solid', 'dotted']
 # define the paths
 workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509'
 result_path = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results'
-savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230615'
+savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230616'
 os.makedirs(savepath, exist_ok=True)
 # Define the radius bins
 xbins_mean = 10**np.arange(-2,3.25,0.25)  # Mpc for 0.25 dex
 xbins_med = 10**np.arange(-2,3.1,0.1)  # Mpc for 0.1 dex
-xbins = {'010dex':[xbins_med, 'med'], '025dex':[xbins_mean, 'mean']}
+xbins = {'025dex':[xbins_mean, 'mean']} # '010dex':[xbins_med, 'med'], 
 
 for mf in massfilter:
     print(mf)
@@ -67,7 +66,7 @@ for mf in massfilter:
         print(prop)
         for weighting in weightings:
             print(weighting)
-            for shape in ['sph', 'cyl']:
+            for shape in ['sph']:
                 print(prop)
                 for k, type in enumerate(['excl', 'incl']):
                     print(type)
@@ -79,7 +78,8 @@ for mf in massfilter:
                         lstyle = lstyles[j]
                         # define paths
                         old_data_path = f'{result_path}/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos'
-                        prof_path = f'{workpath}/xraysb_csvs_{mf}_groups_1028halos/xraylum_csvs_230612_{mf}_groups_radial_pkpc_cyl'
+                        mulprof_path = f'{workpath}/xraysb_csvs_{mf}_groups_1028halos/xraylum_csvs_230616_{mf}_groups_radial_pkpc_cyl'
+                        weightprof_path = f'{workpath}/xraysb_csvs_{mf}_groups_1028halos/xraylum_csvs_230616_{mf}_groups_radial_pkpc_cyl'
                         # read data
                         ## read haloids from sumfile
                         sumfile = glob(f'{old_data_path}/*btw*')[0]
@@ -93,44 +93,44 @@ for mf in massfilter:
                         r200c = r200c_sp[np.isin(soap_ids, halo_ids)]
 
                         ## read profiles
-                        mul_prof = pd.read_csv(f'{prof_path}/{prop}_{binning}_mul_{weighting}_{type}_mul_{shape}.csv') 
+                        mul_prof = pd.read_csv(f'{mulprof_path}/{prop}_{binning}_mul_{weighting}_{type}_{shape}.csv') 
                         print(f'{prop}-{weighting}:{np.nanmin(mul_prof[mul_prof>0]), np.nanmax(mul_prof), np.nanmedian(mul_prof)}')
-                    #     if weighting == 'vol':
-                    #         mass_profname = f'{prof_path}/part_masses_{binning}_{type}_{shape}.csv'
-                    #         dens_profname = f'{prof_path}/part_dens_{binning}_{type}_{shape}.csv'
-                    #         weight_prof = pd.read_csv(mass_profname)/pd.read_csv(dens_profname)
-                    #     elif weighting == 'mass':                   
-                    #         weight_prof = pd.read_csv(f'{prof_path}/part_masses_{binning}_{type}_{shape}.csv')
-                    #     else:
-                    #         weight_prof = pd.read_csv(glob(f'{prof_path}/{weighting}_{binning}_{type}_{shape}.csv')[0])
+                        if weighting == 'vol':
+                            mass_profname = f'{weightprof_path}/part_masses_{binning}_{type}_{shape}.csv'
+                            dens_profname = f'{weightprof_path}/part_dens_{binning}_{type}_{shape}.csv'
+                            weight_prof = pd.read_csv(mass_profname)/pd.read_csv(dens_profname)
+                        elif weighting == 'mass':                   
+                            weight_prof = pd.read_csv(f'{weightprof_path}/part_masses_{binning}_{type}_{shape}.csv')
+                        else:
+                            weight_prof = pd.read_csv(glob(f'{weightprof_path}/{weighting}_{binning}_{type}_{shape}.csv')[0])
 
-                    #     # exclude the radii bin whose cts < 50 and cut the data of zeros rows. 
-                    #     cts_prof = pd.read_csv(f'{prof_path}/cts_{binning}_{type}_{shape}.csv')
-                    #     mul_prof = filter_prof_cts(mul_prof, 50, cts_prof, len(r200c))
-                    #     weight_prof = filter_prof_cts(weight_prof, 50, cts_prof, len(r200c))
+                        # exclude the radii bin whose cts < 50 and cut the data of zeros rows. 
+                        cts_prof = pd.read_csv(f'{weightprof_path}/cts_{binning}_{type}_{shape}.csv')
+                        mul_prof = filter_prof_cts(mul_prof, 50, cts_prof, len(r200c))
+                        weight_prof = filter_prof_cts(weight_prof, 50, cts_prof, len(r200c))
 
-                    #     # weight the profile
-                    #     final_prof = mul_prof/weight_prof
-                    #     # plot profiles: plot profiles of all halos and the median and mean profile. only label 1 kind of line
-                    #     for k in range(len(final_prof)):
-                    #         if k==0:
-                    #             plt.plot(xbins[binning][0]/r200c[k], final_prof[:,k], c = cb[j], label = f'{shape}_{binning}_{type}', alpha = 0.1, linestyle = lstyle)
-                    #         else:
-                    #             plt.plot(xbins[binning][0]/r200c[k], final_prof[:,k], c = cb[j], linestyle = lstyle, alpha = 0.1)
-                    #     plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(final_prof, axis=1), c = cb[j], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 3, alpha = 0.7)
-                    #     plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(final_prof, axis=1), c = cb[j], label = f'{shape}_{binning}_{xbins[binning][1]}_{type}', linestyle = lstyle, linewidth = 3, alpha = 0.8)
-                        
-                    #     # plot relative abundance
+                        mul_prof = mul_prof / np.nansum(weight_prof[(xbins[binning][0]<=1.0)]) * np.median(np.nansum(weight_prof[(xbins[binning][0]<=1.0)]))
+                        # weight the profile
+                        final_prof = mul_prof/weight_prof
+                        # plot profiles: plot profiles of all halos and the median and mean profile. only label 1 kind of line
+                        for k in range(final_prof.shape[1]):
+                            if k==0:
+                                plt.plot(xbins[binning][0]/r200c[k], final_prof[:,k], c = cb[j], label = f'{shape}_{binning}_{type}', alpha = 0.02, linestyle = lstyle)
+                            else:
+                                plt.plot(xbins[binning][0]/r200c[k], final_prof[:,k], c = cb[j], linestyle = lstyle, alpha = 0.1)
+                        plt.plot(xbins[binning][0]/r200c[k], np.nanmedian(final_prof, axis=1), c = cb[j+2], label = f'{shape}_{binning}_median_{type}', linestyle = lstyle, linewidth = 3, alpha = 1)
+                        plt.plot(xbins[binning][0]/r200c[k], np.nanmean(final_prof, axis=1), c = cb[j+1], label = f'{shape}_{binning}_mean_{type}', linestyle = lstyle, linewidth = 3, alpha = 1)
+                        # plot relative abundance
 
 
-                    # plt.xlabel('r / r200c')
-                    # plt.ylabel(f'{prop} weighted by {weighting} [{units[i]}]')
-                    # plt.xscale('log')
-                    # plt.yscale('log')
-                    # plt.title(f'1000 halos in halo mass bin $10^{{{mf}}}$ - $10^{{{mf+0.5}}}$ at z=0 \n {shape}-{type}')
-                    # plt.legend()
-                    # plt.savefig(f'{savepath}/z0_{mf}_{prop}_weightby_{weighting}_{shape}_{type}.png')
-                    # print(f'{datetime.now()}:plot has been created!')
-                    # plt.close()
+                    plt.xlabel('r / r200c')
+                    plt.ylabel(f'{prop} weighted by {weighting} [{units[i]}]')
+                    plt.xscale('log')
+                    plt.yscale('log')
+                    plt.title(f'1000 halos in halo mass bin $10^{{{mf}}}$ - $10^{{{mf+0.5}}}$ at z=0 \n {shape}-{type}')
+                    plt.legend()
+                    plt.savefig(f'{savepath}/z0_{mf}_{prop}_weightby_{weighting}_{shape}_{type}_norm_by_weight200c.png')
+                    print(f'{datetime.now()}:plot has been created!')
+                    plt.close()
 
 
