@@ -31,10 +31,11 @@ def halo_part_in_r200c_nb(coor, halo_center, r200c):
 
 workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot'
 
+reds = 0.1
 # soap
 nside = 1024
-snapnum = 75
-m200c_filter = 15.4
+snapnum = int(77-reds/0.05)
+m200c_filter = 15.0
 
 print('loading soap cat...')
 # first make filters via mass, then read coords and radius only based on mass
@@ -42,8 +43,9 @@ with h5py.File(f"/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/SOAP
     mainhaloids = catalogue_soap["VR/HostHaloID"][()]
     M200_tot = catalogue_soap["SO/200_crit/TotalMass"][()]
     M200_gas = catalogue_soap["SO/200_crit/GasMass"][()]
-    R200 = catalogue_soap["SO/200_crit/SORadius"][()]
-    snapcoor = catalogue_soap["VR/CentreOfPotential"][()]
+    R200 = catalogue_soap["SO/200_crit/SORadius"][()] * (1+reds)
+    # snapcoor = catalogue_soap["VR/CentreOfPotential"][()]
+    snapcoor = catalogue_soap["SO/200_crit/GasCentreOfMass"][()] * (1+reds)
 
 where = (M200_tot>np.power(10.,m200c_filter)) & (mainhaloids==-1)
 M200_tot = M200_tot[where]
@@ -51,7 +53,7 @@ M200_gas = M200_gas[where]
 R200 = R200[where]
 snapcoor = snapcoor[where]
 
-reds = 0.1
+
 snapshot_datapath = '/cosma8/data/dp004/flamingo/Runs/L1000N1800/HYDRO_FIDUCIAL/snapshots_downsampled/'
 snapshot_filename = f'{snapshot_datapath}/flamingo_00{int(77-reds/0.05)}.hdf5'
 workpath = '/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot'
@@ -67,11 +69,15 @@ for id in tqdm(range(len(R200))):
     where = halo_part_in_r200c_nb(data.gas.coordinates.value, snapcoor[id], R200[id])
     halo_masses.append(np.sum(data.gas.masses[where]))
 
-plt.scatter(np.arange(len(halo_masses)), np.array(halo_masses)*1e10, label = 'halo M200c from snapshot', alpha = 0.5)
-plt.scatter(np.arange(len(halo_masses)), M200_gas, label = 'halo M200c from soap', alpha = 0.5)
+plt.scatter(np.array(halo_masses)*1e10, M200_gas, alpha = 0.5)
+plt.xlabel('total gas mass in r200 in snapshot [$\\rm M_{\odot}$]')
+plt.ylabel('M200_gas in SOAP')
+plt.xscale('log')
+plt.title(f'z={reds}, halo mass > $\\rm 10^{{15}} M_{{\odot}}$')
 plt.yscale('log')
+plt.plot(np.array(halo_masses)*1e10,np.array(halo_masses)*1e10, c = 'k')
 plt.legend()
-plt.savefig(f'{savepath}/halo_pos_test_L1000N1800.png')
+plt.savefig(f'{workpath}/fig/test/halo_pos_test_L1000N1800_z01_gasmasscenter.png')
 
 
 # from velociraptor import load as vl_load

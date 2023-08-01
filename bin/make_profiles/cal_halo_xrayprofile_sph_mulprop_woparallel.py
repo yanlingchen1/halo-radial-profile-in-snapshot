@@ -29,24 +29,31 @@ def msk_in_sph_new(coor, halo_center, r1, r2):
 # input parameters
 xbins_mean = np.arange(-2,3.25,0.25)
 xbins_med = np.arange(-2,3.1,0.1)
-mul_props_names = ['abun_oxygen', 'abun_iron'] # , 'abun_hydrogen', 'abun_oxygen', 'abun_iron'
+mul_props_names = ['part_temperatures', 'nH_dens', 'abun_oxygen', 'abun_iron'] # , 'abun_hydrogen', 'abun_oxygen', 'abun_iron'
 xbins_names = ['025dex', '010dex']
 mul_headers = ['mul_mass', 'mul_vol', 'mul_o7f', 'mul_o8', 'mul_fe17']
 mask_names = ['excl', 'incl']
 
+reds = 0.1
+# sim = 'L1000N1800'
+# snapnum = int(77-reds/0.05)
+
+sim = 'L1000N3600'
+snapnum = int(78-reds/0.05)
+
 # # begin calculate profiles
-for mf in [ 14.0, 14.5]:#, 13.5]:
+for mf in [13.5]:
     # set timing
     print(f'{datetime.now()}: Program begins!')
 
     # set paths
-    olddatapath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_wrong_wholeboxz_sb/xraysb_csvs_230504_{mf}_groups_1028halos'
-    workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_1028halos'
-    savepath = f'{workpath}/xraylum_csvs_230616_{mf}_groups_radial_pkpc_cyl'
+    workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/redshift_01/{sim}'
+    savepath = f'{workpath}/profiles_230724_{mf}_nopara'
+    datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_1028halos_cyl'
     os.makedirs(savepath, exist_ok = True)
 
     # read data
-    df_halo = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}_230404.csv')
+    df_halo = pd.read_csv(f'{datapath}/xray_linelum_snapshot{snapnum}_halomass_btw_{int(mf*10)}_{int((mf+0.5)*10)}.csv')
     haloids = df_halo['halo_ids']
     halo_centers = np.array([df_halo['x_gasmass_center'], df_halo['y_gasmass_center'], df_halo['z_gasmass_center']]).T
     halo_r200cs = df_halo['r200c']
@@ -54,7 +61,7 @@ for mf in [ 14.0, 14.5]:#, 13.5]:
     # calculate multiply profile
     # set timing
     print(f'{datetime.now()}: Program begins to calculate mul profile!')
-    for q, xbins in enumerate([xbins_mean]): # , xbins_med
+    for q, xbins in enumerate([xbins_med]): # , xbins_med
         for prop in mul_props_names:
             # multiply mass for mass-weighted profile
             # initialize output
@@ -68,8 +75,9 @@ for mf in [ 14.0, 14.5]:#, 13.5]:
                 halo_cen = halo_centers[k]
                 # print(f'cal halo{haloid} ...')
                 bins = np.power(10, xbins) * 1 #Mpc
-                olddf_part = pd.read_csv(f'{olddatapath}/xray_linelum_snapshot75_halo{int(haloid-1)}_partlum_230404.csv') 
+                olddf_part = pd.read_csv(f'{datapath}/xray_linelum_snapshot{snapnum}_halo{int(haloid-1)}_partlum.csv') 
                 
+
                 datas = [olddf_part['part_masses'] * olddf_part[prop], 
                             olddf_part['part_masses'] / olddf_part['part_dens'] * olddf_part[prop],
                             olddf_part['o7f'] * olddf_part[prop],

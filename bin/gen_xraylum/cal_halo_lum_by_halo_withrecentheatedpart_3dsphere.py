@@ -33,10 +33,12 @@ def halo_part_in_r200c_nb(coor, halo_center, r200c):
             d2 += (coor[i,j] - halo_center[j])**2
         where[i] = d2 < r200c**2
     return where
+
 def interpdens2nH(interpdens, hydrogen_massfrac, redshifts):
     # after np.log10, unyt unit is lost
     scale_factor = 1/(redshifts+1)
     return interpdens.to(g/cm**3) * hydrogen_massfrac / mp.to(g) * (1/scale_factor**3) 
+
 def compute_lum(interp_rest_range, data, table_type, z, where):
     """
     This function compute xray luminosity for particle fall in observed energy bin at z=0
@@ -146,6 +148,7 @@ for mf in mass_filter[::-1]:
         for line in ['fe17', 'o7f', 'o8']:
             lumdict[line] = compute_lum(linesbins[line], data, 'lines', reds, msk)
         return lumdict['o7f'], lumdict['o8'], lumdict['fe17']
+        
     with concurrent.futures.ProcessPoolExecutor(4) as executor:
         for i, result in enumerate(executor.map(cal_halo_summass,np.array(halo_sel_ids-1, dtype = int))):
             halodoc = {}
