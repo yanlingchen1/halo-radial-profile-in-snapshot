@@ -17,6 +17,16 @@ in cal_profiles code:
 if generate the new data in the future, replace '([olddf_part['part_ycoords'], olddf_part['part_zcoords'], olddf_part['tot_abun_to_solar']])' to ([olddf_part['part_xcoords'], olddf_part['part_ycoords'], olddf_part['part_zcoords']])
 
 '''
+@nb.jit(nopython=True)
+def msk_in_cylinder(coor, halo_center, r, z): # r, z in cMpc
+    n = 2
+    where = np.empty(coor.shape[0], dtype=np.bool_)
+    for i in range(coor.shape[0]):
+        d2 = 0.0
+        for j in range(n):
+            d2 += (coor[i,j] - halo_center[j])**2
+        where[i] = (d2 <= r**2) & (coor[i,2] < (halo_center[2]+z/2)) & (coor[i,2] >= (halo_center[2]-z/2))
+    return where  
 
 # define functions
 @nb.jit(nopython=True)
@@ -38,13 +48,17 @@ def msk_in_sph_new(coor, halo_center, r1, r2):
 
 def same_row_in_2darr(a, b):
     return (a[:, None] == b).all(-1).any(-1)
+
+
 # input parameters
-xbins_mean = np.arange(-1.5, 1, 0.25)
-xbins_med = np.arange(-1.5, 1, 0.1)
+# xbins_mean = np.arange(-1.5, 1, 0.25)
+# xbins_med = np.arange(-1.5, 1, 0.1)
+xbins_med = np.arange(-1.5, 0.5, 0.1)
+xbins_mean = np.arange(-1.5, 0.5, 0.25)
 mul_props_names = ['tot_abun']
 xbins_names = ['010dex']
 props_names = ['part_masses', 'part_vol', 'o7f', 'o8', 'fe17'] # , 
-mask_names = ['excl', 'incl']
+mask_names = ['excl'] #, 'incl'
 
 reds = 0.1
 sim = 'L1000N1800'
@@ -53,6 +67,7 @@ snapnum = int(77-reds/0.05)
 # sim = 'L1000N3600'
 # snapnum = int(78-reds/0.05)
 
+halonum = 1028
 # # begin calculate profiles
 for mf in [13.5]:
     # set timing
@@ -61,7 +76,7 @@ for mf in [13.5]:
     # set paths
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/redshift_01/{sim}'
     savepath = f'{workpath}/profiles_230718_{mf}_paratest_abun'
-    datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_1028halos_cyl'
+    datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_{halonum}halos_cyl'
     os.makedirs(savepath, exist_ok = True)
 
     # read data
@@ -92,7 +107,10 @@ for mf in [13.5]:
                         # 
                         olddf_part = pd.read_csv(f'{datapath}/xray_linelum_snapshot{snapnum}_halo{int(haloid-1)}_partlum.csv') 
                         data_part = pd.read_csv(f'{datapath}/tot_abun_snapshot{snapnum}_halo{int(haloid-1)}.csv')
+                        file_partid = np.load(f'{datapath}/part_ids/msk_ids_snapshot75_halo{int(haloid-1)}_{sim}_{halonum}halos.npy')
                         
+                        old_coords = np.array([olddf_part['part_ycoords'], olddf_part['part_zcoords'], olddf_part['tot_abun_to_solar']]).T
+                        new_coords = np.array([data_part['part_xcoords'], data_part['part_ycoords'], data_part['part_zcoords']]).T
                         '''
                         The olddf_part save all the particles in the smallest snapshot box (~30Mpc) (Should be corrected later)
                         while the data_part only save all the particles in the cylinder.
@@ -101,56 +119,45 @@ for mf in [13.5]:
                         So if coor1 ==coor2, we take the particles for calculating.
                         
                         '''
-                        # 
-                        old_coords, old_idx = np.unique(np.array([olddf_part['part_ycoords'], olddf_part['part_zcoords'], olddf_part['tot_abun_to_solar']]).T, axis=0, return_index=True)
-                        print(len(old_coords))
-                        new_coords, new_idx = np.unique(np.array([data_part['part_xcoords'], data_part['part_ycoords'], data_part['part_zcoords']]).T, axis=0, return_index = True)
 
-                        coords_msk = np.isin(old_coords, new_coords).all(axis=1)
+                        coords_msk = file_partid
                         # coords_msk = np.isin(old_coords[:,0], new_coords[:,0]) & np.isin(old_coords[:,1], new_coords[:,1]) & np.isin(old_coords[:,2], new_coords[:,2])
-                        
-                        if np.sum(coords_msk) != len(new_coords):
-                            print(k)
-                            print('wrong coords msk due to perhaps floating error')
-                        else:
 
-                            arr = np.zeros(len(bins))
+                        arr = np.zeros(len(bins))
+                        # 
+                        for i in range(len(bins)-1):
+                            # load mask
+                            new_radmsk = msk_in_sph_new(new_coords, halo_cen, bins[i], bins[i+1])
+                            old_radmsk = msk_in_sph_new(old_coords, halo_cen, bins[i], bins[i+1])
+                            if mask_name == 'excl':
+                                old_msk = old_radmsk & np.array(olddf_part['jointmsk'])
+                                new_msk = np.array(olddf_part['jointmsk'])[coords_msk] & new_radmsk
+
+
+                            # elif mask_name == 'incl':
+                            #     olddf_mask = coords_msk 
+                            #     data_mask = radmsk
+
+                            # else:
+                            #     return ValueError('Invalid Mask name!')
                             
-                            # 
-                            for i in range(len(bins)-1):
+                            # from IPython import embed
+                            # embed()
+                            # calculate data
+                            if mul_prop == 'part_vol':
+                                data = np.array(olddf_part['part_masses'][old_msk]) / np.array(olddf_part['part_dens'][old_msk]) * np.array(data_part[prop][new_msk])
+                            else:
+                                data = np.array(olddf_part[mul_prop][old_msk]) * np.array(data_part[prop][new_msk])
 
-                                # load mask
-                                radmsk = msk_in_sph_new(new_coords, halo_cen, bins[i], bins[i+1])
-                                from IPython import embed
-                                embed()
-                                if mask_name == 'excl':
-                                    olddf_mask = coords_msk & (np.array(olddf_part['jointmsk'][old_idx]))
-                                    data_mask = (np.array(olddf_part['jointmsk'][old_idx]))[coords_msk] & radmsk
-
-                                elif mask_name == 'incl':
-                                    olddf_mask = coords_msk 
-                                    data_mask = radmsk
-
-                                else:
-                                    return ValueError('Invalid Mask name!')
-                                
-                                # calculate data
-                                if mul_prop == 'part_vol':
-                                    data = np.array(olddf_part['part_masses'][old_idx][olddf_mask][radmsk]) / np.array(olddf_part['part_dens'][old_idx][olddf_mask][radmsk]) * np.array(data_part[prop][new_idx][data_mask])
-                                else:
-                                    data = np.array(olddf_part[mul_prop][old_idx][olddf_mask][radmsk]) * np.array(data_part[prop][new_idx][data_mask])
-                                
-                                
-                                arr[i] = np.nansum(data)
-                                print(arr)
-                            return arr
+                            arr[i] = np.nansum(data)
+                        return arr
 
                     # # # # testing
                     # res = cal_xraylum_mul(18)
-                    # #     # try:
-                    # #     #     res = cal_xraylum_mul(1) 
-                    # #     # except:
-                    # #     #     print(i)                   
+                    # # #     # try:
+                    # # #     #     res = cal_xraylum_mul(1) 
+                    # # #     # except:
+                    # # #     #     print(i)                   
 
                 
                     # formal run

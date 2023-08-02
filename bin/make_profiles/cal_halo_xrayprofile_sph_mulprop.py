@@ -41,7 +41,7 @@ xbins_mean = np.arange(-1.5, 1, 0.25)
 xbins_med = np.arange(-1.5, 1, 0.1)
 mul_props_names = ['nH_dens', 'part_temperatures', 'abun_oxygen', 'abun_iron']
 xbins_names = ['010dex'] # , '025dex'
-mul_headers = ['mul_mass', 'mul_vol', 'mul_o7r', 'mul_o8', 'mul_fe17']
+mul_headers = ['mul_vol'] #'mul_mass', 'mul_o7r', 'mul_o8', 'mul_fe17'
 props_names = ['part_vol']
 mask_names = ['excl']
 

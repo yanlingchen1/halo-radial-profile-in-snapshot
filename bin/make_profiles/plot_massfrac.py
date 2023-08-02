@@ -32,7 +32,7 @@ basic_figure_style()
 cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4', '#949494', '#ece133', '#56b4e9']
 
 # define parameters
-massfilter = [14.5]
+massfilter = [13.5]
 props = ['part_masses']
 # props = ['o7f', 'o8', 'fe17']#['part_masses', 'part_temperatures', 'part_dens', 'cts', ]
 # define sims
@@ -58,7 +58,7 @@ for mf in massfilter:
     for prop in props:
         # set workdir, datadir
         workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/redshift_01/{sim}'
-        datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_128halos_cyl'
+        datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_1028halos_cyl'
         prof_path = f'{workpath}/profiles_230718_{mf}'
         savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230718/ind_profile'
         os.makedirs(savepath, exist_ok=True)        
@@ -94,8 +94,8 @@ for mf in massfilter:
                         prof = np.array(prof)[:, :len(r200c)]
                         sum_prof = np.cumsum(prof, axis=0)
 
-                        # weighted by xray emi bol lum in r200c from soap
-                        sum_prof = sum_prof / xray_emibollum * np.nanmedian(xray_emibollum)
+                        # # weighted by xray emi bol lum in r200c from soap
+                        # sum_prof = sum_prof / xray_emibollum * np.nanmedian(xray_emibollum)
                         
                         print(np.median(r200c/r200c))
                         # for k in range(len(sum_prof)):
@@ -125,6 +125,6 @@ for mf in massfilter:
 
                 plt.title(f'$\\rm 1e{mf}-{mf+0.5} M_{{\odot}}$ gas mass fraction v.s. r')
                 plt.legend()
-                plt.savefig(f"{savepath}/{prop}_1e{mf}_{shape}_gas-mass_vs_totgasmass-frac_vs_r_inr200c_weightedby_emilum_inr200c.png")
+                plt.savefig(f"{savepath}/{prop}_1e{mf}_{shape}_gas-mass_vs_totgasmass-frac_vs_r_inr200c_NOTweightedby_emilum_inr200c.png")
                 print('plot has been created!')
                 plt.close()

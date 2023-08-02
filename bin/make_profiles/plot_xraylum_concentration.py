@@ -125,7 +125,6 @@ for mf in massfilter:
                     figname = 'OVIII'
 
 
-
         plt.plot(df[0], df[1], label = 'Nastasha', c = cb[-2])
         plt.xlabel('$\\rm log_{10}(r / r_{200c})$')
         plt.ylabel('$\\rm log_{10}(L_{gas}(<r)$ / $\\rm L_{gas}(<r_{200c}))$')
