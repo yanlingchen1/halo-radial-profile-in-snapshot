@@ -43,7 +43,7 @@ mul_props_names = ['nH_dens', 'part_temperatures', 'abun_oxygen', 'abun_iron']
 xbins_names = ['010dex'] # , '025dex'
 mul_headers = ['mul_vol'] #'mul_mass', 'mul_o7r', 'mul_o8', 'mul_fe17'
 props_names = ['part_vol']
-mask_names = ['excl']
+mask_names = ['incl']
 
 reds = 0.1
 sim = 'L1000N1800'

@@ -91,8 +91,8 @@ def cal_halo_summass(sid):
     xray_Fe17_msk = xray_file['fe17']!=0
 
 
-    from IPython import embed
-    embed()
+    # from IPython import embed
+    # embed()
     return data.gas.particle_ids, msk, msk & calxray_msk, msk & exclude_rhp_msk, msk & xray_O8_msk, msk & xray_O7_msk, msk & xray_Fe17_msk 
 
 

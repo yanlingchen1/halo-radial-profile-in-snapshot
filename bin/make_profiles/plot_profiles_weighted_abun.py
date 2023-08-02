@@ -129,9 +129,11 @@ workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapsho
 savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230718/weighted_profs'
 os.makedirs(savepath, exist_ok=True)
 # Define the radius bins
-xbins_mean = np.arange(-1.5, 1, 0.25)
-xbins_med = np.arange(-1.5, 1, 0.1)
-
+# xbins_mean = np.arange(-1.5, 1, 0.25)
+# xbins_med = np.arange(-1.5, 1, 0.1)
+## for abundance
+xbins_mean = np.arange(-1.5, 0.5, 0.25)
+xbins_med = np.arange(-1.5, 0.5, 0.1)
 xbins = {'010dex':[xbins_med, 'med']} #'025dex':[xbins_mean, 'mean'], 
 
 for mf in massfilter:
@@ -192,7 +194,9 @@ for mf in massfilter:
                         
 
                         cts_prof = np.array(pd.read_csv(f'{weightprof_path}/cts_{binning}_{type}_{shape}.csv'))
-
+                        ## for abundance
+                        weight_prof = weight_prof[:-5]
+                        cts_prof = cts_prof[:-5]
 
                         mul_prof = filter_prof_cts(np.array(mul_prof), 50, cts_prof)
                         weight_prof = filter_prof_cts(np.array(weight_prof), 50, cts_prof)
@@ -205,6 +209,8 @@ for mf in massfilter:
                         # weight the profile
                         if len(weight_prof) -1  == len(mul_prof):
                             weight_prof = weight_prof[:-1]
+                        elif len(weight_prof) == len(mul_prof):
+                            weight_prof = weight_prof
                         else:
                             raise ValueError('Wrong mul_prof or weight_prof length!')
 
@@ -227,8 +233,8 @@ for mf in massfilter:
                         #     else:
                         #         plt.plot(xbins[binning][0]/r200c[k], final_prof[:,k], c = cb[j+1], linestyle = lstyle, alpha = 0.1)
 
-                        plt.plot(xbins[binning][0][:-1], np.log10(np.nanmedian(final_prof, axis=1)), c = cb[j+2], label = f'{shape}_{binning}_median_{type}', linestyle = lstyles[m], linewidth = 3, alpha = 1)
-                        plt.plot(xbins[binning][0][:-1], np.log10(np.nanmean(final_prof, axis=1)), c = cb[j+1], label = f'{shape}_{binning}_mean_{type}', linestyle = lstyles[m], linewidth = 3, alpha = 1)
+                        plt.plot(xbins[binning][0], np.log10(np.nanmedian(final_prof, axis=1)), c = cb[j+2], label = f'{shape}_{binning}_median_{type}', linestyle = lstyles[m], linewidth = 3, alpha = 1)
+                        plt.plot(xbins[binning][0], np.log10(np.nanmean(final_prof, axis=1)), c = cb[j+1], label = f'{shape}_{binning}_mean_{type}', linestyle = lstyles[m], linewidth = 3, alpha = 1)
 
                         # plot relative abundance
 
