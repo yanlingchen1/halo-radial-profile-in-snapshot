@@ -10,6 +10,11 @@ from datetime import datetime
 ### The densities (nH or particles) are linear, not in log!
 # define functions
 def filter_prof_cts(prof, thres, ctsprof):
+    '''
+    1. for every single halo , for every radii bin, if cts< thres, set the value to nan
+    2. for every bin, for all the halos, if the valid radii bin <100, set the whole row to 0
+    
+    '''
     if len(ctsprof) == len(prof)+1:
         ctsprof = ctsprof[:-1]
         prof[ctsprof<thres] = np.nan
@@ -17,6 +22,7 @@ def filter_prof_cts(prof, thres, ctsprof):
         prof[ctsprof<thres] = np.nan
     else:
         raise ValueError(f'Wrong profile length! ctsprof: {ctsprof.shape}, prof: {prof.shape}')
+    prof[np.sum(np.isfinite(prof), axis=1)<0, :] = np.nan
     return prof
 
 def argmedian(data):
@@ -46,48 +52,48 @@ cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4
     ######################################################
 
 
-def choose_nastasha_profs(prop):
+def choose_nastasha_profs(prop, mf):
     '''
     prop is profname
     Only for halo mass 13.5-14.0
-    
     '''
+    m = f'{int(mf*10)}-{int((mf+0.5)*10)}'
     nas_dir = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/nastasha_plots_data'
     if 'temperature' in prop:
         if 'mass' in prop:
-            df = pd.read_csv(f'{nas_dir}/T_r_weighted_mass_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/T_r_weighted_mass_M{m}.csv', header = None)
         elif 'o7f' in prop:
-            df = pd.read_csv(f'{nas_dir}/T_r_weighted_OVIIr_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/T_r_weighted_OVIIr_M{m}.csv', header = None)
         elif 'o8' in prop:
-            df = pd.read_csv(f'{nas_dir}/T_r_weighted_OVIII_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/T_r_weighted_OVIII_M{m}.csv', header = None)
         elif 'vol' in prop:
-            df = pd.read_csv(f'{nas_dir}/T_r_weighted_vol_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/T_r_weighted_vol_M{m}.csv', header = None)
         else:
             print('No corresponding Nastasha profiles')
             return None
 
     elif 'nH' in prop:
         if 'mass' in prop:
-            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_mass_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_mass_M{m}.csv', header = None)
         elif 'o7f' in prop:
-            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_OVIIr_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_OVIIr_M{m}.csv', header = None)
         elif 'o8' in prop:
-            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_OVIII_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_OVIII_M{m}.csv', header = None)
         elif 'vol' in prop:
-            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_vol_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/nH_r_weighted_vol_M{m}.csv', header = None)
         else:
             print('No corresponding Nastasha profiles')
             return None
 
     elif 'abun' in prop:
         if 'mass' in prop:
-            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_mass_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_mass_M{m}.csv', header = None)
         elif 'o7f' in prop:
-            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_OVIIr_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_OVIIr_M{m}.csv', header = None)
         elif 'o8' in prop:
-            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_OVIII_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_OVIII_M{m}.csv', header = None)
         elif 'vol' in prop:
-            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_vol_M135-140.csv', header = None)
+            df = pd.read_csv(f'{nas_dir}/totabun_r_weighted_vol_M{m}.csv', header = None)
         else:
             print('No corresponding Nastasha profiles')
             return None
@@ -101,9 +107,9 @@ def choose_nastasha_profs(prop):
 # define parameters
 # massfilter = np.arange(13.0, 15.5, 0.5)
 massfilter = [13.5]
-props = ['tot_abun'] # 'part_temperatures', 'nH_dens', 'abun_iron', 'abun_oxygen'
-units = ['$Z_{\odot}$']# 'K', '$\\rm cm^{-3}$', '$Z_{\odot}$', 
-weightings = ['part_vol','part_vol', 'o7f', 'o8', 'fe17'] #
+props = [ 'part_temperatures'] #  'part_temperatures','nH_dens','tot_abun_to_solar', 'tot_abun', 'abun_iron', 'abun_oxygen'
+units = ['K']# 'K', '$\\rm cm^{-3}$', '$Z_{\odot}$', '$Z_{\odot}$', '$Z_{\odot}$', '$Z_{\odot}$'
+weightings = ['part_vol',] #, 'part_masses','part_vol', 'o7f', 'o8', 'fe17' 
 
 
 # define the sim
@@ -111,7 +117,7 @@ reds = 0.1
 
 sim  = 'L1000N1800'
 snapnum = int(77 - reds / 0.05)
-halonum = 1028
+halonum = 32
 
 # sim = 'L1000N3600'
 # snapnum = int(78 - reds / 0.05)
@@ -126,7 +132,7 @@ lstyles = ['solid', 'dotted']
 
 # define the paths
 workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/redshift_01/{sim}'
-savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230718/weighted_profs'
+savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230809/weighted_profs'
 os.makedirs(savepath, exist_ok=True)
 # Define the radius bins
 xbins_mean = np.arange(-1.5, 1, 0.25)
@@ -139,26 +145,24 @@ for mf in massfilter:
     ### for old datas 
     # result_path = f'{workpath}/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_{halonum}halos'
     # old_data_path = f'{workpath}/results_other_prop_but_wrong_xrayflux/xraysb_csvs_230504_{mf}_groups_{halonum}halos'
-    # mulprof_path = f'{workpath}/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_{halonum}halos/xraylum_csvs_230616_{mf}_groups_radial_pkpc_cyl'
-    # weightprof_path = f'{workpath}/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_{halonum}halos/xraylum_csvs_230612_{mf}_groups_radial_pkpc_cyl'
+    # mulprof_path = f'{workpath}/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_{halonum}halos/xraylum_csvs_230616_{mf}_groups_radial_pkpc_sph'
+    # weightprof_path = f'{workpath}/results_add_xraylum_sb_230509/xraysb_csvs_{mf}_groups_{halonum}halos/xraylum_csvs_230612_{mf}_groups_radial_pkpc_sph'
 
     ### for new datas 
-    result_path = f'{workpath}/xraysb_csvs_230718_{mf}_groups_{halonum}halos_cyl'
-    old_data_path = f'{workpath}/xraysb_csvs_230718_{mf}_groups_{halonum}halos_cyl'
-    mulprof_path = f'{workpath}/profiles_230718_{mf}_paratest_abun'
-    weightprof_path = f'{workpath}/profiles_230718_{mf}'
+    result_path = f'{workpath}/xraysb_csvs_230809_{mf}_groups_{halonum}halos_sph'
+    old_data_path = f'{workpath}/xraysb_csvs_230809_{mf}_groups_{halonum}halos_sph'
+    mulprof_path = f'{workpath}/profiles_230809_{mf}_paratest_r500c'
+    weightprof_path = f'{workpath}/profiles_230809_{mf}_ind_r500c'
 
     for i, prop in enumerate(props):
         for weighting in weightings:
             for shape in ['sph']:
                 fig, ax = plt.subplots(figsize = (8,8))
-                for m, type in enumerate(['excl']):
-
+                for m, type in enumerate(['jointmsk']):
                     # make a profile plot: {mf}_{prop}_{weighting}_{shape}_{recentpart_type}
                     for j, binning in enumerate(xbins.keys()):
                         # define plotting style
                         lstyle = lstyles[j]
-
                         # read data
                         ## read haloids from sumfile
                         sumfile = glob(f'{old_data_path}/*btw*')[0]
@@ -172,10 +176,10 @@ for mf in massfilter:
                             soap_ids = np.array(catalogue_soap["VR/ID"][()])
                             r200c_sp = catalogue_soap["SO/200_crit/SORadius"][()] * (1+reds)
 
-
                         ## read profiles
                         prof_name = f'{prop}_mul_{weighting}_{binning}_{type}_{shape}.csv'
                         mul_prof = pd.read_csv(f'{mulprof_path}/{prof_name}') 
+
 
                         
                         if weighting == 'vol':
@@ -188,14 +192,13 @@ for mf in massfilter:
                             weight_prof = pd.read_csv(glob(f'{weightprof_path}/{weighting}_{binning}_{type}_{shape}.csv')[0])
 
                         # exclude the radii bin whose cts < 50 and cut the data of zeros rows. 
-                        
-                        
-
                         cts_prof = np.array(pd.read_csv(f'{weightprof_path}/cts_{binning}_{type}_{shape}.csv'))
 
-
-                        mul_prof = filter_prof_cts(np.array(mul_prof), 50, cts_prof)
-                        weight_prof = filter_prof_cts(np.array(weight_prof), 50, cts_prof)
+                        # from IPython import embed
+                        # embed()
+                        
+                        mul_prof = filter_prof_cts(np.array(mul_prof), 0, cts_prof)
+                        weight_prof = filter_prof_cts(np.array(weight_prof), 0, cts_prof)
 
 
                         # from IPython import embed
@@ -214,8 +217,18 @@ for mf in massfilter:
                         # embed()
 
 
-                        # weighted by xray emi bol lum in r200c from soap
-                        final_prof = multiplied_prof[:, 1:] / np.array(xray_emibollum) * np.nanmedian(xray_emibollum)
+                        ## weighted by xray line lum in r200c from soap
+                        if weighting in ['o8', 'o7r', 'fe17']:
+                            L200c = np.nansum(weight_prof[xbins_med[1:]<=0], axis=0)[:-1]
+                            print(weighting, L200c)
+                            # from IPython import embed
+                            # embed()
+      
+                            final_prof = multiplied_prof[:, 1:] / np.array(L200c) * np.nanmedian(L200c)
+                        else:
+                            final_prof = multiplied_prof[:32]
+
+                        # final_prof = multiplied_prof[:, 1:] / np.array(xray_emibollum) * np.nanmedian(xray_emibollum)
                         print(final_prof)
                         # from IPython import embed
                         # embed()
@@ -232,20 +245,20 @@ for mf in massfilter:
 
                         # plot relative abundance
 
-                # plot Nastasha
-                df = choose_nastasha_profs(prof_name)
-                if df is not None:
-                    plt.plot(df[0], df[1], c = cb[0], label = 'Nastasha')
+                # # plot Nastasha
+                # df = choose_nastasha_profs(prof_name, mf)
+                # if df is not None:
+                #     plt.plot(df[0], df[1], c = cb[0], label = 'Nastasha')
 
                 # plotting settings
                 plt.xlabel('$\\rm log_{10}(r / r_{200c})$')
                 plt.ylabel(f'$\\rm log_{{10}}$  {prop} weighted by {weighting} [{units[i]}]')
                 plt.xlim(-1.5, 1.)
 
-                plt.title(f'{halonum} halos in halo mass bin $10^{{{mf}}}$ - $10^{{{mf+0.5}}}$ at z={reds} \n {shape}-{type}')
+                plt.title(f'{sim}: {halonum} halos in halo mass bin $10^{{{mf}}}$ - $10^{{{mf+0.5}}}$ at z={reds} \n {shape}-{type}')
                 plt.legend()
 
-                plt.savefig(f'{savepath}/z01_{mf}_{prop}_weightby_{weighting}_{shape}_norm_by_weightL200c.png')
+                plt.savefig(f'{savepath}/tst.png')
                 print(f'{datetime.now()}:plot has been created!')
                 plt.close()
 

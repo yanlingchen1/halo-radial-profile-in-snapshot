@@ -34,7 +34,7 @@ cb = ['#0173b2', '#de8f05', '#029e73', '#d55e00', '#cc78bc', '#ca9161', '#fbafe4
 # define parameters
 massfilter = [13.5]
 # props = ['part_masses']
-props = ['o7f', 'o8', 'fe17']
+props = ['o7f', 'o8']
 # props = ['o7f', 'o8', 'fe17']#['part_masses', 'part_temperatures', 'part_dens', 'cts', ]
 reds = 0.1
 
@@ -54,7 +54,7 @@ xbins = {'010dex':[xbins_med, 'med']} # , '025dex':[xbins_mean, 'mean']
 for mf in massfilter:
     for prop in props:
         fig, ax = plt.subplots(figsize = (8,8))
-        for m, sim in enumerate(['L1000N1800']): # , 'L1000N3600'
+        for m, sim in enumerate(['L1000N1800']): # , 
             if sim == 'L1000N1800':
                 snapnum = int(77-reds/0.05)
                 halonum = 1028
@@ -69,15 +69,17 @@ for mf in massfilter:
             # z=0.1
             workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/redshift_01/{sim}'
             datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_{halonum}halos_cyl'
-            prof_path = f'{workpath}/profiles_230718_{mf}'
+            prof_path = f'{workpath}/profiles_230718_{mf}_ind'
             
             
-            savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230718/ind_profile'
+            savepath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/fig/profiles_230805/ind_profile'
             os.makedirs(savepath, exist_ok=True)        
 
 
             # read r200c from the summary file
+
             sumfilename = glob(f'{datapath}/*btw*')[0]
+            
             sumfile = pd.read_csv(sumfilename)
             halo_ids = sumfile['halo_ids']
             r200c = sumfile['r200c']
@@ -86,7 +88,7 @@ for mf in massfilter:
             
             # Plot part_mass in r versus M200c
             for shape in ['sph']: # cyl
-                for k, type in enumerate(['excl']): # , 'incl'
+                for k, type in enumerate([ 'rhp']): # , 'incl'
                     
                     for i, binning in enumerate(xbins.keys()):
                         lstyle = lstyles[i]
@@ -96,8 +98,8 @@ for mf in massfilter:
                         prof = np.array(prof)[:, :len(r200c)]
                         sum_prof = np.cumsum(prof, axis=0)
 
-                        # weighted by xray emi bol lum in r200c from soap
-                        sum_prof = sum_prof / xray_emibollum * np.nanmean(xray_emibollum)
+                        # # weighted by xray emi bol lum in r200c from soap
+                        # sum_prof = sum_prof / xray_emibollum * np.nanmean(xray_emibollum)
 
                         # for k in range(len(sum_prof)):
                         #     if k==0:
@@ -107,8 +109,8 @@ for mf in massfilter:
                         if binning == '010dex':
                             ### choose the sum mas enclosed in r200c (closed to the med(r200c) of all halos as the r200c mass)
                             msk = np.argmin(abs(xbins[binning][0]))
-                            plt.plot(xbins[binning][0], np.log10(np.nanmedian(sum_prof/sum_prof[msk], axis=1)), c = cb[0], label = f'{shape}_{binning}_{xbins[binning][1]}_med_{sim}', linestyle = lstyles[m], linewidth = 2, alpha = 0.8)
-                            plt.plot(xbins[binning][0], np.log10(np.nanmean(sum_prof/sum_prof[msk], axis=1)), c = cb[1], label = f'{shape}_{binning}_{xbins[binning][1]}_mean_{sim}', linestyle = lstyles[m], linewidth = 2, alpha = 0.8)
+                            plt.plot(xbins[binning][0], np.log10(np.nanmedian(sum_prof/sum_prof[msk], axis=1)), c = cb[k], label = f'{shape}_{binning}_{xbins[binning][1]}_med_{sim}_{type}',  linestyle = 'dotted', linewidth = 3*(k+1), alpha = 0.5)
+                            # plt.plot(xbins[binning][0], np.log10(np.nanmean(sum_prof/sum_prof[msk], axis=1)), c = cb[1], label = f'{shape}_{binning}_{xbins[binning][1]}_mean_{sim}', linestyle = lstyles[m], linewidth = 2, alpha = 0.8)
                         elif binning == '025dex':
                             msk = np.argmin(abs(xbins[binning][0]))
                             plt.plot(xbins[binning][0], np.log10(np.nanmean(sum_prof/sum_prof[msk], axis=1)), c = cb[1], label = f'{shape}_{binning}_{xbins[binning][1]}_mean_{sim}', linestyle = lstyles[m], linewidth = 2, alpha = 0.8)
@@ -118,11 +120,12 @@ for mf in massfilter:
                 ### plot nastasha data ###
                 nas_dir = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/nastasha_plots_data'
                 if 'o7' in prof_name:
-                    df = pd.read_csv(f'{nas_dir}/L_OVIIr_concentrate.csv', header=None)
+                    df = pd.read_csv(f'{nas_dir}/L_OVIIr_concentrate_M125-130.csv', header=None)
                     figname = 'OVIIr'
                 elif 'o8' in prof_name:
-                    df = pd.read_csv(f'{nas_dir}/L_OVIII_concentrate.csv', header=None)
+                    df = pd.read_csv(f'{nas_dir}/L_OVIII_concentrate_M125-130.csv', header=None)
                     figname = 'OVIII'
+
 
 
         plt.plot(df[0], df[1], label = 'Nastasha', c = cb[-2])
@@ -131,7 +134,7 @@ for mf in massfilter:
         plt.ylim(-1.5, 0.25)
         plt.title(f'$\\rm 1e{mf}-{mf+0.5} M_{{\odot}} L_{{{figname}}} $ v.s. r')
         plt.legend()
-        plt.savefig(f"{savepath}/{figname}_1e{mf}_{shape}_gas-mass_vs_totgasmass-frac_vs_r_z{reds}.png", bbox_inches="tight")
+        plt.savefig(f"{savepath}/{figname}_1e{mf}_{shape}_gas-mass_vs_totgasmass-frac_vs_r_z{reds}_NOTweightedL200c.png", bbox_inches="tight")
         print('plot has been created!')
         plt.close()
 

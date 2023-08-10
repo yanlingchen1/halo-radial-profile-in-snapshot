@@ -77,9 +77,13 @@ def convert_le_to_ri(y):
     return np.log10(np.power(10,y)*1e4*1e5 *(1/360*(np.pi/180)**2))
 # plt.ylabel(f'$\\rm log_{{10}}$SB [photons/100ks/$\\rm m^2/10arcmin^2$]')
 # plt.xlabel(f'$\\rm log_{{10}}$r/r200c')
+
+
 for i, line in enumerate(['fe17', 'o7f', 'o8']):
     for part in ['incl', 'excl']:
         mode = f'lum_{line}_{part}'
+        
+        
         fig, ax1 = plot_doubley(f'$\\rm pkpc$',  f'$\\rm log_{{10}}$SB [photons/s/$\\rm cm^2/sr$]',f'$\\rm log_{{10}}$SB [photons/100ks/$\\rm m^2/10arcmin^2$]', np.arange(-4.0,4.0,1.0), np.ceil(convert_le_to_ri(np.arange(-4.0,4.0,1.0))))
         dat = pd.read_csv(f'{workpath}/{mode}.csv')
         dat[~np.isfinite(dat)] = 0
