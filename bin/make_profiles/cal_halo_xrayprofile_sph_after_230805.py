@@ -43,18 +43,18 @@ xbins_mean = np.arange(-1.5, 1, 0.25)
 # xbins_med = np.arange(-1.5, 1, 0.1)
 xbins_med = np.log10(np.logspace(-2, np.log10(3), 30))
 # set saved varnames
-props_names = ['part_masses']#,'part_masses','part_vol', 'cts', 'o7f', 'o8', 'fe17' 'tot_abun', 'cts', 'o7f', 'o8', 'fe17', 'part_vol']
+props_names = ['part_vol', 'cts']#,'part_masses','part_vol', 'cts', 'o7f', 'o8', 'fe17' 'tot_abun', 'cts', 'o7f', 'o8', 'fe17', 'part_vol']
 xbins_names = ['010dex'] # 025dex
 mask_names = ['jointmsk']
 
-for mf in [13.0, 13.5, 14.0, 14.5, 15.0]: # 13.0, 13.5, 14.0, 14.5, 15.0
+for mf in [13.5]: # 13.0, 13.5, 14.0, 14.5, 15.0
     print(f'{datetime.now()}: Program begins!')
 
     # input parameters
     reds = 0.1
     sim = 'L1000N1800'
     snapnum = int(77-reds/0.05)
-    halonum = 32
+    halonum = 1028
 
     # sim = 'L1000N3600'
     # snapnum = int(78-reds/0.05)
@@ -62,8 +62,8 @@ for mf in [13.0, 13.5, 14.0, 14.5, 15.0]: # 13.0, 13.5, 14.0, 14.5, 15.0
 
     # set paths
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/redshift_01/{sim}'
-    savepath = f'{workpath}/profiles_230809_{mf}_ind_r500c_FINEBIN'
-    datapath = f'{workpath}/xraysb_csvs_230809_{mf}_groups_{halonum}halos_sph'
+    savepath = f'{workpath}/profiles_230810_{mf}_ind_r500c_FINEBIN'
+    datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_{halonum}halos_cyl'
     os.makedirs(savepath, exist_ok = True)
     
     # load halo summary file
@@ -119,7 +119,7 @@ for mf in [13.0, 13.5, 14.0, 14.5, 15.0]: # 13.0, 13.5, 14.0, 14.5, 15.0
                 with concurrent.futures.ProcessPoolExecutor(32) as executor:
                     output = np.zeros((len(xbins), len(haloids)))
 
-                    for k, result in enumerate(executor.map(cal_xraylum_excl, np.arange(32))): #len(haloids)
+                    for k, result in enumerate(executor.map(cal_xraylum_excl, np.arange(len(haloids)))): #len(haloids)
                         print(f'{datetime.now()}:{k}')
                         output[:,k] = result
 

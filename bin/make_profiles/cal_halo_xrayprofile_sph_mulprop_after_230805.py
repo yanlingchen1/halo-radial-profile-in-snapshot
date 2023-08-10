@@ -57,14 +57,14 @@ halonum = 1028
 
 
 # # begin calculate profiles
-for mf in [13.0, 13.5, 14.0, 14.5, 15.0]: #13.0, 13.5, 14.0, 14.5, 15.0
+for mf in [13.5]: #13.0, 13.5, 14.0, 14.5, 15.0
     # set timing
     print(f'{datetime.now()}: Program begins!')
 
     # set paths
     workpath = f'/cosma8/data/dp004/dc-chen3/work/bin/halo-radial-profile-in-snapshot/results/redshift_01/{sim}'
-    savepath = f'{workpath}/profiles_230718_{mf}_paratest_r500c_FINEBIN'
-    datapath = f'{workpath}/xraysb_csvs_230809_{mf}_groups_{halonum}halos_sph'
+    savepath = f'{workpath}/profiles_230810_{mf}_paratest_r500c_FINEBIN'
+    datapath = f'{workpath}/xraysb_csvs_230718_{mf}_groups_{halonum}halos_cyl'
     os.makedirs(savepath, exist_ok = True)
 
     # read data
